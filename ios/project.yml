@@ -1,0 +1,31 @@
+name: MacDeck
+options:
+  bundleIdPrefix: com.macdeck
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: "4TAY4CMD35"
+targets:
+  MacDeck:
+    type: application
+    platform: iOS
+    sources:
+      - path: MacDeck
+    info:
+      path: MacDeck/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        NSLocalNetworkUsageDescription: "MacDeck se connecte à votre Mac sur le réseau local pour le contrôler."
+        NSBonjourServices:
+          - "_macdeck._tcp"
+          - "_http._tcp"
+        UIUserInterfaceStyle: Dark

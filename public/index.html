@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MacDeck">
+  <meta name="theme-color" content="#0d0d0d">
+  <link rel="manifest" href="/manifest.json">
+  <title>MacDeck</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --card: #1a1a1a;
+      --card2: #222;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --text-dim: #666;
+      --accent-app: #8b5cf6;
+      --accent-shortcut: #3b82f6;
+      --accent-system: #f59e0b;
+      --accent-media: #10b981;
+      --red: #ef4444;
+      --radius: 12px;
+      --gap: 10px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* ── Layout ── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      padding: env(safe-area-inset-top, 8px) env(safe-area-inset-right, 8px) env(safe-area-inset-bottom, 8px) env(safe-area-inset-left, 8px);
+      gap: var(--gap);
+    }
+
+    #status-bar {
+      display: none;
+      background: var(--red);
+      color: #fff;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+    #status-bar.visible { display: block; }
+
+    #main {
+      display: flex;
+      flex: 1;
+      gap: var(--gap);
+      min-height: 0;
+    }
+
+    /* ── Left column ── */
+    #left-col {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      width: 34%;
+      min-width: 0;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    /* Volume */
+    #volume-card {
+      flex: 0 0 auto;
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    #vol-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    #vol-icon { font-size: 20px; }
+
+    #vol-value {
+      font-size: 22px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      min-width: 42px;
+      text-align: right;
+    }
+
+    /* Custom slider */
+    .slider-track {
+      position: relative;
+      height: 28px;
+      background: #111;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+
+    .slider-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      border-radius: 14px;
+      transition: width 0.05s;
+      pointer-events: none;
+    }
+
+    .slider-thumb {
+      position: absolute;
+      top: 50%;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      pointer-events: none;
+      transition: left 0.05s;
+    }
+
+    #mute-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 8px;
+      background: var(--card2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    #mute-btn.muted { background: var(--red); }
+    #mute-btn:active { transform: scale(0.95); }
+
+    /* Media */
+    #media-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+    #now-playing {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    #np-title {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+
+    #np-artist {
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    #media-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .media-btn {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      border-radius: 8px;
+      background: var(--card2);
+      color: var(--accent-media);
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .media-btn:active { transform: scale(0.9); background: #1a3a2a; }
+
+    /* ── Right column ── */
+    #right-col {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    #btn-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--gap);
+    }
+
+    .section-title {
+      grid-column: 1 / -1;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 2px 0 4px;
+    }
+
+    .deck-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 10px 4px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s, border-color 0.15s;
+      min-height: 64px;
+    }
+
+    .deck-btn:active { transform: scale(0.92); }
+
+    .deck-btn .icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .deck-btn .label {
+      font-size: 10px;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.2;
+      color: var(--text-dim);
+    }
+
+    /* Category colors */
+    .btn-app    { border-color: rgba(139,92,246,0.3); }
+    .btn-app:active    { background: rgba(139,92,246,0.15); }
+    .btn-app .icon     { color: var(--accent-app); }
+
+    .btn-shortcut { border-color: rgba(59,130,246,0.3); }
+    .btn-shortcut:active { background: rgba(59,130,246,0.15); }
+    .btn-shortcut .icon  { color: var(--accent-shortcut); }
+
+    .btn-system { border-color: rgba(245,158,11,0.3); }
+    .btn-system:active { background: rgba(245,158,11,0.15); }
+    .btn-system .icon  { color: var(--accent-system); }
+
+    /* Toggle state */
+    .deck-btn.active.btn-system { background: rgba(245,158,11,0.2); border-color: var(--accent-system); }
+
+    /* Feedback flash */
+    @keyframes flash-ok {
+      0%   { background: rgba(16,185,129,0.3); }
+      100% { background: var(--card); }
+    }
+    @keyframes flash-err {
+      0%   { background: rgba(239,68,68,0.4); }
+      100% { background: var(--card); }
+    }
+    .deck-btn.flash-ok  { animation: flash-ok  0.4s ease-out forwards; }
+    .deck-btn.flash-err { animation: flash-err 0.4s ease-out forwards; }
+
+    /* scrollbar */
+    #right-col::-webkit-scrollbar { width: 0; }
+
+    /* ── Portrait mode ── */
+    @media (orientation: portrait) {
+      #main {
+        flex-direction: column;
+      }
+
+      #left-col {
+        width: 100%;
+        flex-direction: row;
+        flex: 0 0 auto;
+      }
+
+      #volume-card {
+        flex: 1;
+      }
+
+      #media-card {
+        flex: 1;
+      }
+
+      #right-col {
+        flex: 1;
+        min-height: 0;
+      }
+
+      #btn-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="status-bar">⚠ Impossible de joindre le Mac — reconnexion…</div>
+
+  <div id="main">
+    <!-- Left column -->
+    <div id="left-col">
+
+      <div class="card" id="volume-card">
+        <div class="card-label">Volume</div>
+        <div id="vol-display">
+          <span id="vol-icon">🔊</span>
+          <span id="vol-value">50</span>
+        </div>
+        <div class="slider-track" id="slider-track">
+          <div class="slider-fill"  id="slider-fill"  style="width:50%"></div>
+          <div class="slider-thumb" id="slider-thumb" style="left:50%"></div>
+        </div>
+        <button id="mute-btn">
+          <span id="mute-icon">🔊</span>
+          <span id="mute-label">Muet</span>
+        </button>
+      </div>
+
+      <div class="card" id="media-card">
+        <div class="card-label">Média</div>
+        <div id="now-playing">
+          <div id="np-title">—</div>
+          <div id="np-artist"></div>
+        </div>
+        <div id="media-controls">
+          <button class="media-btn" id="btn-prev" title="Précédent">⏮</button>
+          <button class="media-btn" id="btn-play" title="Play/Pause">⏯</button>
+          <button class="media-btn" id="btn-next" title="Suivant">⏭</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div id="right-col">
+      <div id="btn-grid">
+
+        <div class="section-title">Apps</div>
+
+        <button class="deck-btn btn-app" data-action="launch" data-app="Safari">
+          <span class="icon">🧭</span><span class="label">Safari</span>
+        </button>
+        <button class="deck-btn btn-app" data-action="launch" data-app="Visual Studio Code">
+          <span class="icon">💻</span><span class="label">VS Code</span>
+        </button>
+        <button class="deck-btn btn-app" data-action="launch" data-app="Terminal">
+          <span class="icon">⌨️</span><span class="label">Terminal</span>
+        </button>
+        <button class="deck-btn btn-app" data-action="launch" data-app="Spotify">
+          <span class="icon">🎵</span><span class="label">Spotify</span>
+        </button>
+        <button class="deck-btn btn-app" data-action="launch" data-app="Discord">
+          <span class="icon">💬</span><span class="label">Discord</span>
+        </button>
+        <button class="deck-btn btn-app" data-action="launch" data-app="Finder">
+          <span class="icon">📁</span><span class="label">Finder</span>
+        </button>
+
+        <div class="section-title">Raccourcis</div>
+
+        <button class="deck-btn btn-shortcut" data-action="shortcut" data-keys='["cmd","shift","3"]'>
+          <span class="icon">📸</span><span class="label">Screenshot</span>
+        </button>
+        <button class="deck-btn btn-shortcut" data-action="shortcut" data-keys='["cmd","shift","4"]'>
+          <span class="icon">✂️</span><span class="label">Zone</span>
+        </button>
+        <button class="deck-btn btn-shortcut" data-action="shortcut" data-keys='["cmd","space"]'>
+          <span class="icon">🔍</span><span class="label">Spotlight</span>
+        </button>
+        <button class="deck-btn btn-shortcut" data-action="shortcut" data-keys='["cmd","ctrl","q"]'>
+          <span class="icon">🔒</span><span class="label">Verrouiller</span>
+        </button>
+        <button class="deck-btn btn-shortcut" data-action="shortcut" data-keys='["F3"]'>
+          <span class="icon">🪟</span><span class="label">Mission Control</span>
+        </button>
+        <button class="deck-btn btn-shortcut" data-action="finder-new">
+          <span class="icon">📂</span><span class="label">New Finder</span>
+        </button>
+
+        <div class="section-title">Système</div>
+
+        <button class="deck-btn btn-system" id="btn-dnd" data-action="dnd">
+          <span class="icon">🌙</span><span class="label">Ne pas déranger</span>
+        </button>
+        <button class="deck-btn btn-system" data-action="sleep">
+          <span class="icon">💤</span><span class="label">Sleep</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+// Change this to your Mac's IP, or leave as empty string to auto-detect
+// (auto-detect works when iPhone and Mac are on the same network and you open
+//  via the server's URL directly)
+const MAC_IP = '';
+const BASE = MAC_IP ? `http://${MAC_IP}:3000` : '';
+
+// ── State ───────────────────────────────────────────────────────────────────
+let volume = 50;
+let muted = false;
+let dndActive = false;
+let connected = true;
+let retryTimer = null;
+
+// ── DOM refs ─────────────────────────────────────────────────────────────────
+const statusBar    = document.getElementById('status-bar');
+const volValue     = document.getElementById('vol-value');
+const volIcon      = document.getElementById('vol-icon');
+const sliderTrack  = document.getElementById('slider-track');
+const sliderFill   = document.getElementById('slider-fill');
+const sliderThumb  = document.getElementById('slider-thumb');
+const muteBtn      = document.getElementById('mute-btn');
+const muteIcon     = document.getElementById('mute-icon');
+const muteLabel    = document.getElementById('mute-label');
+const npTitle      = document.getElementById('np-title');
+const npArtist     = document.getElementById('np-artist');
+const btnDnd       = document.getElementById('btn-dnd');
+
+// ── API ──────────────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(BASE + path, opts);
+    const data = await r.json();
+    setConnected(true);
+    return data;
+  } catch (e) {
+    setConnected(false);
+    return { success: false, error: e.message };
+  }
+}
+
+function get(path)        { return api('GET', path); }
+function post(path, body) { return api('POST', path, body); }
+
+// ── Connection state ─────────────────────────────────────────────────────────
+function setConnected(ok) {
+  if (ok === connected) return;
+  connected = ok;
+  statusBar.classList.toggle('visible', !ok);
+  if (!ok && !retryTimer) {
+    retryTimer = setInterval(syncStatus, 5000);
+  } else if (ok && retryTimer) {
+    clearInterval(retryTimer);
+    retryTimer = null;
+  }
+}
+
+// ── Volume slider ────────────────────────────────────────────────────────────
+function updateVolUI(v) {
+  volume = Math.max(0, Math.min(100, v));
+  const pct = volume + '%';
+  sliderFill.style.width  = pct;
+  sliderThumb.style.left  = pct;
+  volValue.textContent    = volume;
+  volIcon.textContent     = volume === 0 ? '🔇' : volume < 40 ? '🔉' : '🔊';
+}
+
+let dragging = false;
+
+function volFromEvent(e) {
+  const rect = sliderTrack.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  return Math.round(Math.max(0, Math.min(100, (x / rect.width) * 100)));
+}
+
+sliderTrack.addEventListener('touchstart', e => {
+  dragging = true;
+  updateVolUI(volFromEvent(e));
+}, { passive: true });
+
+sliderTrack.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  updateVolUI(volFromEvent(e));
+}, { passive: true });
+
+sliderTrack.addEventListener('touchend', async () => {
+  dragging = false;
+  await post('/volume', { value: volume });
+});
+
+sliderTrack.addEventListener('mousedown', e => {
+  dragging = true;
+  updateVolUI(volFromEvent(e));
+});
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  updateVolUI(volFromEvent(e));
+});
+document.addEventListener('mouseup', async () => {
+  if (!dragging) return;
+  dragging = false;
+  await post('/volume', { value: volume });
+});
+
+// ── Mute ─────────────────────────────────────────────────────────────────────
+function updateMuteUI(m) {
+  muted = m;
+  muteBtn.classList.toggle('muted', m);
+  muteIcon.textContent  = m ? '🔇' : '🔊';
+  muteLabel.textContent = m ? 'Unmute' : 'Muet';
+}
+
+muteBtn.addEventListener('click', async () => {
+  const newMuted = !muted;
+  updateMuteUI(newMuted);
+  await post('/mute', { muted: newMuted });
+});
+
+// ── Media ─────────────────────────────────────────────────────────────────────
+document.getElementById('btn-prev').addEventListener('click', () => post('/media/prev'));
+document.getElementById('btn-play').addEventListener('click', () => post('/media/play-pause'));
+document.getElementById('btn-next').addEventListener('click', () => post('/media/next'));
+
+function updateNowPlaying(np) {
+  if (np && np.title) {
+    npTitle.textContent  = np.title;
+    npArtist.textContent = np.artist || np.app || '';
+  } else {
+    npTitle.textContent  = '—';
+    npArtist.textContent = '';
+  }
+}
+
+// ── Deck buttons ──────────────────────────────────────────────────────────────
+async function handleDeckBtn(btn) {
+  const action = btn.dataset.action;
+  let ok = true;
+
+  try {
+    if (action === 'launch') {
+      const r = await post('/launch', { app: btn.dataset.app });
+      ok = r.success;
+    } else if (action === 'shortcut') {
+      const keys = JSON.parse(btn.dataset.keys);
+      const r = await post('/shortcut', { keys });
+      ok = r.success;
+    } else if (action === 'finder-new') {
+      const r = await post('/shortcut', { keys: ['cmd', 'n'] });
+      // Also ensure Finder is front
+      await post('/launch', { app: 'Finder' });
+      ok = r.success;
+    } else if (action === 'dnd') {
+      const r = await post('/system/dnd');
+      if (r.success) {
+        dndActive = !dndActive;
+        btnDnd.classList.toggle('active', dndActive);
+      }
+      ok = r.success;
+    } else if (action === 'sleep') {
+      ok = (await post('/system/sleep')).success;
+    }
+  } catch (_) {
+    ok = false;
+  }
+
+  btn.classList.remove('flash-ok', 'flash-err');
+  void btn.offsetWidth; // reflow
+  btn.classList.add(ok ? 'flash-ok' : 'flash-err');
+  setTimeout(() => btn.classList.remove('flash-ok', 'flash-err'), 450);
+}
+
+document.querySelectorAll('.deck-btn').forEach(btn => {
+  btn.addEventListener('click', () => handleDeckBtn(btn));
+});
+
+// ── Sync ──────────────────────────────────────────────────────────────────────
+async function syncStatus() {
+  const s = await get('/system/status');
+  if (!s.success) return;
+  updateVolUI(s.volume);
+  updateMuteUI(s.muted);
+  updateNowPlaying(s.nowPlaying);
+}
+
+async function syncNowPlaying() {
+  const r = await get('/media/now-playing');
+  if (r.success) updateNowPlaying(r.title ? r : null);
+}
+
+// Initial sync
+syncStatus();
+
+// Poll now-playing every 10s
+setInterval(syncNowPlaying, 10000);
+
+// Register SW
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
