@@ -304,6 +304,24 @@ app.get('/system/status', async (req, res) => {
       status.nowPlaying = { app, title, artist };
     }
   } catch (_) {}
+  try {
+    const battOut = execSync('pmset -g batt', { encoding: 'utf8' });
+    const bm = battOut.match(/(\d+)%;/);
+    if (bm) status.battery = parseInt(bm[1]);
+    status.charging = battOut.includes('AC Power') || battOut.includes('charging');
+  } catch (_) {}
+  try {
+    status.darkMode = execSync(
+      `osascript -e 'tell application "System Events" to tell appearance preferences to return dark mode'`,
+      { encoding: 'utf8' }
+    ).trim() === 'true';
+  } catch (_) {}
+  try {
+    status.activeApp = execSync(
+      `osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'`,
+      { encoding: 'utf8' }
+    ).trim();
+  } catch (_) {}
   res.json({ success: true, ...status });
 });
 
@@ -430,6 +448,33 @@ app.post('/system/trash', async (req, res) => {
   } catch (e) {
     res.json({ success: false, error: e.message });
   }
+});
+
+// ─── Contrôles système avancés ─────────────────────────────────────────────
+
+app.post('/system/lock', async (req, res) => {
+  try {
+    await run('open -a ScreenSaverEngine');
+    res.json({ success: true });
+  } catch (e) { res.json({ success: false, error: e.message }); }
+});
+
+app.post('/system/sleep-display', async (req, res) => {
+  try {
+    await run('pmset displaysleepnow');
+    res.json({ success: true });
+  } catch (e) { res.json({ success: false, error: e.message }); }
+});
+
+app.post('/system/dark-mode', async (req, res) => {
+  try {
+    await osascript('tell app "System Events" to tell appearance preferences to set dark mode to not dark mode');
+    const darkMode = execSync(
+      `osascript -e 'tell application "System Events" to tell appearance preferences to return dark mode'`,
+      { encoding: 'utf8' }
+    ).trim() === 'true';
+    res.json({ success: true, darkMode });
+  } catch (e) { res.json({ success: false, error: e.message }); }
 });
 
 // ─── Start ─────────────────────────────────────────────────────────────────

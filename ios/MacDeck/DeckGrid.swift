@@ -61,20 +61,6 @@ struct DeckAction: Identifiable {
     }
 }
 
-private let fixedActions: [DeckAction] = [
-    // Row 3 — bleu clair (raccourcis)
-    DeckAction(symbol: "camera.viewfinder", label: "Screenshot",  category: .shortcut) { await $0.shortcut(keys: ["cmd","shift","3"]) },
-    DeckAction(symbol: "magnifyingglass",   label: "Spotlight",   category: .shortcut) { await $0.shortcut(keys: ["cmd","space"]) },
-    DeckAction(symbol: "lock",              label: "Verrouiller", category: .shortcut) { await $0.shortcut(keys: ["cmd","ctrl","q"]) },
-    DeckAction(symbol: "rectangle.stack",   label: "Mission",     category: .shortcut) { await $0.shortcut(keys: ["F3"]) },
-    DeckAction(symbol: "arrow.left.arrow.right.square", label: "App Switch", category: .shortcut) { await $0.shortcut(keys: ["cmd","tab"]) },
-    // Row 4 — orange (système)
-    DeckAction(symbol: "xmark.app",         label: "Close App",   category: .system)   { await $0.shortcut(keys: ["cmd","q"]) },
-    DeckAction(symbol: "moon.fill",         label: "DND",         category: .system)   { await $0.toggleDND() },
-    DeckAction(symbol: "zzz",              label: "Sleep",        category: .system)   { await $0.sleep() },
-    DeckAction(symbol: "trash",            label: "Corbeille",   category: .system)   { await $0.emptyTrash() },
-]
-
 // ── Grid ──────────────────────────────────────────────────────────────────────
 
 struct DeckGrid: View {
@@ -88,16 +74,11 @@ struct DeckGrid: View {
         ZStack(alignment: .topTrailing) {
             if isPortrait {
                 GeometryReader { geo in
-                    let totalItems = vm.customApps.count + fixedActions.count
-                    let rows = Int(ceil(Double(totalItems) / 4.0))
+                    let rows = max(1, Int(ceil(Double(vm.customApps.count) / 4.0)))
                     let btnH = (geo.size.height - CGFloat(rows - 1) * 8) / CGFloat(rows)
                     LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(Array(vm.customApps.enumerated()), id: \.element.id) { idx, app in
                             AppDeckButton(app: app, idx: idx, vm: vm)
-                                .frame(height: btnH)
-                        }
-                        ForEach(fixedActions) { action in
-                            FixedDeckButton(action: action, vm: vm)
                                 .frame(height: btnH)
                         }
                     }
@@ -107,9 +88,6 @@ struct DeckGrid: View {
                     LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(Array(vm.customApps.enumerated()), id: \.element.id) { idx, app in
                             AppDeckButton(app: app, idx: idx, vm: vm)
-                        }
-                        ForEach(fixedActions) { action in
-                            FixedDeckButton(action: action, vm: vm)
                         }
                     }
                 }
@@ -224,8 +202,15 @@ struct FixedDeckButton: View {
                     .stroke(isToggled ? action.category.accent : action.category.border, lineWidth: 1))
         }
         .buttonStyle(ScaleButtonStyle())
+        .onAppear {
+            if action.symbol == "moon.fill" { isToggled = vm.dndActive }
+            if action.symbol == "circle.lefthalf.filled" { isToggled = vm.isDarkMode }
+        }
         .onChange(of: vm.dndActive) { val in
             if action.symbol == "moon.fill" { isToggled = val }
+        }
+        .onChange(of: vm.isDarkMode) { val in
+            if action.symbol == "circle.lefthalf.filled" { isToggled = val }
         }
     }
 

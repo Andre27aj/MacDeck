@@ -36,21 +36,20 @@ struct ContentView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
-                // Main layout — adapts to orientation
                 GeometryReader { geo in
                     let isPortrait = geo.size.height > geo.size.width
                     if isPortrait {
                         VStack(spacing: 8) {
                             LeftPanel(vm: vm, isPortrait: true)
                                 .fixedSize(horizontal: false, vertical: true)
-                            DeckGrid(vm: vm, isPortrait: true)
+                            PagedDeckView(vm: vm, isPortrait: true)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     } else {
                         HStack(alignment: .top, spacing: 8) {
                             LeftPanel(vm: vm, isPortrait: false)
                                 .frame(width: geo.size.width * 0.32)
-                            DeckGrid(vm: vm)
+                            PagedDeckView(vm: vm)
                         }
                     }
                 }
@@ -60,9 +59,20 @@ struct ContentView: View {
             .padding(.vertical, 8)
             .animation(.easeInOut(duration: 0.2), value: vm.connected)
 
-            // Settings gear
+            // Top overlay: battery + settings gear
             VStack {
                 HStack {
+                    if let batt = vm.battery {
+                        HStack(spacing: 3) {
+                            Image(systemName: vm.isCharging ? "battery.100.bolt" : batterySymbol(batt))
+                                .font(.system(size: 12))
+                                .foregroundColor(batteryColor(batt))
+                            Text("\(batt)%")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Color(hex: "555555"))
+                        }
+                        .padding(.leading, 12)
+                    }
                     Spacer()
                     Button { showSettings = true } label: {
                         Image(systemName: "gearshape")
@@ -77,5 +87,19 @@ struct ContentView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView(vm: vm)
         }
+    }
+
+    private func batterySymbol(_ level: Int) -> String {
+        switch level {
+        case 0..<15:  return "battery.0"
+        case 15..<40: return "battery.25"
+        case 40..<65: return "battery.50"
+        case 65..<85: return "battery.75"
+        default:      return "battery.100"
+        }
+    }
+
+    private func batteryColor(_ level: Int) -> Color {
+        level < 20 ? .red : level < 40 ? Color(hex: "f59e0b") : Color(hex: "22c55e")
     }
 }

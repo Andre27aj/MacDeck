@@ -14,9 +14,13 @@
 		400CBEA2672E971FBCA3B020 /* CustomApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A4D5354E02F7993441B7FA /* CustomApp.swift */; };
 		5CBCA8E2CCC71F696F4F65A9 /* ServiceDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70AA4DC7668156F96F753890 /* ServiceDiscovery.swift */; };
 		798F5B10901F8091ACFE530F /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92523BDA7896EAB1C69992CE /* Extensions.swift */; };
+		7E65155C10CC2A096275D60F /* PagedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D2664D10625162ECBB7B1BB /* PagedDeckView.swift */; };
 		8237855E842C56AFA776D514 /* MutePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60321DC33BB61A5150D505E1 /* MutePanel.swift */; };
 		92CD37CA5E8E12724A929657 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E868B988119C5E1E15678789 /* SettingsView.swift */; };
 		9E8BFA325F7B2B818A4F5908 /* AppEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239BA1AE4EB8468DDF905F23 /* AppEditorView.swift */; };
+		BCE2024D5D37E66791A69D98 /* AppProfiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 695B5651184DFBF6FDB4BDAF /* AppProfiles.swift */; };
+		CD8838864CE6B4540C6289BD /* AppProfilePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8EDB9AB8D0A3096B394EB1B /* AppProfilePage.swift */; };
+		DBD13ED1D49C6DC1C1C9F0AE /* SystemPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CAE54F73C43597821DCF114 /* SystemPage.swift */; };
 		E902EA1F9E87D1534856B94A /* DeckGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD7C482412C5A4CF8674F466 /* DeckGrid.swift */; };
 		F304F3F3D023E8A80B5EEFF4 /* MacDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D484D8311B03D64C563C6C7 /* MacDeckApp.swift */; };
 		F4AE526B778BB5BA39D0B7C6 /* LeftPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069F8A81D63885FF4E972874 /* LeftPanel.swift */; };
@@ -28,11 +32,15 @@
 		239BA1AE4EB8468DDF905F23 /* AppEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEditorView.swift; sourceTree = "<group>"; };
 		2AC8B9A4B5220B5B26CCB823 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		32E5CB3B4902D91BD532A39C /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		3CAE54F73C43597821DCF114 /* SystemPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPage.swift; sourceTree = "<group>"; };
 		4D484D8311B03D64C563C6C7 /* MacDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDeckApp.swift; sourceTree = "<group>"; };
 		55A4D5354E02F7993441B7FA /* CustomApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomApp.swift; sourceTree = "<group>"; };
 		60321DC33BB61A5150D505E1 /* MutePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutePanel.swift; sourceTree = "<group>"; };
+		695B5651184DFBF6FDB4BDAF /* AppProfiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProfiles.swift; sourceTree = "<group>"; };
+		6D2664D10625162ECBB7B1BB /* PagedDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagedDeckView.swift; sourceTree = "<group>"; };
 		70AA4DC7668156F96F753890 /* ServiceDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDiscovery.swift; sourceTree = "<group>"; };
 		92523BDA7896EAB1C69992CE /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		A8EDB9AB8D0A3096B394EB1B /* AppProfilePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProfilePage.swift; sourceTree = "<group>"; };
 		AD7C482412C5A4CF8674F466 /* DeckGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckGrid.swift; sourceTree = "<group>"; };
 		BEB480DFE1A54467C0027334 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E651998EADD3E557575A197F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -46,6 +54,8 @@
 			children = (
 				32E5CB3B4902D91BD532A39C /* APIClient.swift */,
 				239BA1AE4EB8468DDF905F23 /* AppEditorView.swift */,
+				A8EDB9AB8D0A3096B394EB1B /* AppProfilePage.swift */,
+				695B5651184DFBF6FDB4BDAF /* AppProfiles.swift */,
 				2AC8B9A4B5220B5B26CCB823 /* Assets.xcassets */,
 				BEB480DFE1A54467C0027334 /* ContentView.swift */,
 				55A4D5354E02F7993441B7FA /* CustomApp.swift */,
@@ -55,8 +65,10 @@
 				069F8A81D63885FF4E972874 /* LeftPanel.swift */,
 				4D484D8311B03D64C563C6C7 /* MacDeckApp.swift */,
 				60321DC33BB61A5150D505E1 /* MutePanel.swift */,
+				6D2664D10625162ECBB7B1BB /* PagedDeckView.swift */,
 				70AA4DC7668156F96F753890 /* ServiceDiscovery.swift */,
 				E868B988119C5E1E15678789 /* SettingsView.swift */,
+				3CAE54F73C43597821DCF114 /* SystemPage.swift */,
 				10991C0EAFF087AFED612079 /* ViewModel.swift */,
 			);
 			path = MacDeck;
@@ -150,6 +162,8 @@
 			files = (
 				20CEE8296F48C66553FF6221 /* APIClient.swift in Sources */,
 				9E8BFA325F7B2B818A4F5908 /* AppEditorView.swift in Sources */,
+				CD8838864CE6B4540C6289BD /* AppProfilePage.swift in Sources */,
+				BCE2024D5D37E66791A69D98 /* AppProfiles.swift in Sources */,
 				3682C10C52961C5DB6DF9811 /* ContentView.swift in Sources */,
 				400CBEA2672E971FBCA3B020 /* CustomApp.swift in Sources */,
 				E902EA1F9E87D1534856B94A /* DeckGrid.swift in Sources */,
@@ -157,8 +171,10 @@
 				F4AE526B778BB5BA39D0B7C6 /* LeftPanel.swift in Sources */,
 				F304F3F3D023E8A80B5EEFF4 /* MacDeckApp.swift in Sources */,
 				8237855E842C56AFA776D514 /* MutePanel.swift in Sources */,
+				7E65155C10CC2A096275D60F /* PagedDeckView.swift in Sources */,
 				5CBCA8E2CCC71F696F4F65A9 /* ServiceDiscovery.swift in Sources */,
 				92CD37CA5E8E12724A929657 /* SettingsView.swift in Sources */,
+				DBD13ED1D49C6DC1C1C9F0AE /* SystemPage.swift in Sources */,
 				0F316C98B64853646653A452 /* ViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

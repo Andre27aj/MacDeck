@@ -16,10 +16,20 @@ class ViewModel: ObservableObject {
     @Published var currentAudioDevice: String = ""
     @Published var macIP: String
     @Published var customApps: [CustomApp]
+    @Published var battery: Int? = nil
+    @Published var isCharging: Bool = false
+    @Published var isDarkMode: Bool = false
+    @Published var activeApp: String = ""
+    @Published var currentPage: Int = 0
 
+    private var lastActiveProfileApp: String = ""
     private var pollTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
     private var discovery: ServiceDiscovery?
+
+    var activeProfile: AppProfile? {
+        appProfiles.first { $0.appName.lowercased() == activeApp.lowercased() }
+    }
 
     init() {
         let saved = UserDefaults.standard.string(forKey: "macIP") ?? ""
@@ -52,14 +62,10 @@ class ViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        if saved.isEmpty {
-            startDiscovery()
-        } else {
-            startPolling()
-        }
+        if saved.isEmpty { startDiscovery() } else { startPolling() }
     }
 
-    // ── Discovery ─────────────────────────────────────────────────────────────
+    // ── Discovery ─────────────────────────────────────────────────────────────────
 
     func startDiscovery() {
         discovering = true
@@ -78,14 +84,13 @@ class ViewModel: ObservableObject {
         discovery?.start()
     }
 
-    // ── Polling ───────────────────────────────────────────────────────────────
+    // ── Polling ───────────────────────────────────────────────────────────────────
 
     private func startPolling() {
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.syncStatus()
-                let delay: UInt64 = (self?.connected == true) ? 30_000_000_000 : 5_000_000_000
-                try? await Task.sleep(nanoseconds: delay)
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
             }
         }
     }
@@ -99,12 +104,30 @@ class ViewModel: ObservableObject {
             muted = s.muted
             if let np = s.nowPlaying { nowPlayingTitle = np.title ?? ""; nowPlayingArtist = np.artist ?? "" }
             if let mic = s.micMuted { micMuted = mic }
+            if let batt = s.battery { battery = batt }
+            if let charging = s.charging { isCharging = charging }
+            if let dm = s.darkMode { isDarkMode = dm }
+            if let app = s.activeApp { activeApp = app }
             if !connected { fetchAudioDevices(); fetchBrightness() }
             connected = true
+            updateAutoProfile()
         } catch { connected = false }
     }
 
-    // ── Volume ────────────────────────────────────────────────────────────────
+    private func updateAutoProfile() {
+        let profile = appProfiles.first { $0.appName.lowercased() == activeApp.lowercased() }
+        if let profile = profile {
+            if profile.appName != lastActiveProfileApp {
+                lastActiveProfileApp = profile.appName
+                currentPage = 2
+            }
+        } else if !lastActiveProfileApp.isEmpty {
+            lastActiveProfileApp = ""
+            if currentPage == 2 { currentPage = 0 }
+        }
+    }
+
+    // ── Volume ────────────────────────────────────────────────────────────────────
 
     func adjustVolume(_ delta: Double) {
         volume = min(100, max(0, volume + delta))
@@ -130,20 +153,18 @@ class ViewModel: ObservableObject {
         }
     }
 
-    // ── Media ─────────────────────────────────────────────────────────────────
+    // ── Media ─────────────────────────────────────────────────────────────────────
 
     func playPause() { Task { _ = try? await (APIClient.post("/media/play-pause") as ServerResponse) } }
     func nextTrack() { Task { _ = try? await (APIClient.post("/media/next") as ServerResponse) } }
     func prevTrack() { Task { _ = try? await (APIClient.post("/media/prev") as ServerResponse) } }
 
-    // ── Brightness ────────────────────────────────────────────────────────────
+    // ── Brightness ────────────────────────────────────────────────────────────────
 
     func commitBrightness() {
         let v = brightness
         Task { _ = try? await (APIClient.post("/system/brightness", body: ["value": Int(v)]) as ServerResponse) }
     }
-
-    // ── Audio ─────────────────────────────────────────────────────────────────
 
     func fetchBrightness() {
         Task {
@@ -152,6 +173,8 @@ class ViewModel: ObservableObject {
             }
         }
     }
+
+    // ── Audio ─────────────────────────────────────────────────────────────────────
 
     func fetchAudioDevices() {
         Task {
@@ -171,17 +194,20 @@ class ViewModel: ObservableObject {
         return r.success
     }
 
-    // ── Actions ───────────────────────────────────────────────────────────────
+    // ── Actions ───────────────────────────────────────────────────────────────────
 
     func launch(app: String) async -> Bool {
         (try? await (APIClient.post("/launch", body: ["app": app]) as ServerResponse).success) ?? false
     }
+
     func shortcut(keys: [String]) async -> Bool {
         (try? await (APIClient.post("/shortcut", body: ["keys": keys]) as ServerResponse).success) ?? false
     }
+
     func sleep() async -> Bool {
         (try? await (APIClient.post("/system/sleep") as ServerResponse).success) ?? false
     }
+
     func toggleDND() async -> Bool {
         guard let r = try? await (APIClient.post("/system/dnd") as ServerResponse) else { return false }
         if r.success { dndActive.toggle() }
@@ -190,5 +216,19 @@ class ViewModel: ObservableObject {
 
     func emptyTrash() async -> Bool {
         (try? await (APIClient.post("/system/trash") as ServerResponse).success) ?? false
+    }
+
+    func lockScreen() async -> Bool {
+        (try? await (APIClient.post("/system/lock") as ServerResponse).success) ?? false
+    }
+
+    func sleepDisplay() async -> Bool {
+        (try? await (APIClient.post("/system/sleep-display") as ServerResponse).success) ?? false
+    }
+
+    func toggleDarkMode() async -> Bool {
+        guard let r = try? await (APIClient.post("/system/dark-mode") as DarkModeResponse) else { return false }
+        if r.success { isDarkMode = r.darkMode }
+        return r.success
     }
 }

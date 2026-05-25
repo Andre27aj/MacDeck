@@ -10,6 +10,15 @@ struct SystemStatus: Decodable {
     var muted: Bool
     var micMuted: Bool?
     var nowPlaying: NowPlayingData?
+    var battery: Int?
+    var charging: Bool?
+    var darkMode: Bool?
+    var activeApp: String?
+}
+
+struct DarkModeResponse: Decodable {
+    var success: Bool
+    var darkMode: Bool
 }
 
 struct NowPlayingData: Decodable {
