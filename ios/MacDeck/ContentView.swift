@@ -42,8 +42,9 @@ struct ContentView: View {
                     if isPortrait {
                         VStack(spacing: 8) {
                             LeftPanel(vm: vm, isPortrait: true)
-                                .frame(height: geo.size.height * 0.33)
-                            DeckGrid(vm: vm)
+                                .fixedSize(horizontal: false, vertical: true)
+                            DeckGrid(vm: vm, isPortrait: true)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     } else {
                         HStack(alignment: .top, spacing: 8) {

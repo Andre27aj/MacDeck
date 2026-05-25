@@ -80,21 +80,37 @@ private let fixedActions: [DeckAction] = [
 struct DeckGrid: View {
     @ObservedObject var vm: ViewModel
     @State var showEditor = false
+    var isPortrait: Bool = false
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            ScrollView(showsIndicators: false) {
-                LazyVGrid(columns: columns, spacing: 8) {
-                    // App buttons (customizable)
-                    ForEach(Array(vm.customApps.enumerated()), id: \.element.id) { idx, app in
-                        AppDeckButton(app: app, idx: idx, vm: vm)
+            if isPortrait {
+                GeometryReader { geo in
+                    let totalItems = vm.customApps.count + fixedActions.count
+                    let rows = Int(ceil(Double(totalItems) / 4.0))
+                    let btnH = (geo.size.height - CGFloat(rows - 1) * 8) / CGFloat(rows)
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(Array(vm.customApps.enumerated()), id: \.element.id) { idx, app in
+                            AppDeckButton(app: app, idx: idx, vm: vm)
+                                .frame(height: btnH)
+                        }
+                        ForEach(fixedActions) { action in
+                            FixedDeckButton(action: action, vm: vm)
+                                .frame(height: btnH)
+                        }
                     }
-
-                    // Fixed buttons
-                    ForEach(fixedActions) { action in
-                        FixedDeckButton(action: action, vm: vm)
+                }
+            } else {
+                ScrollView(showsIndicators: false) {
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(Array(vm.customApps.enumerated()), id: \.element.id) { idx, app in
+                            AppDeckButton(app: app, idx: idx, vm: vm)
+                        }
+                        ForEach(fixedActions) { action in
+                            FixedDeckButton(action: action, vm: vm)
+                        }
                     }
                 }
             }
