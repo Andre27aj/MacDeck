@@ -1,0 +1,17 @@
+node_modules/
+.env
+*.log
+
+# Xcode
+ios/build/
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcworkspace/xcuserdata/
+ios/DerivedData/
+*.xcarchive
+*.ipa
+
+# Claude
+.claude/
+
+# macOS
+.DS_Store
