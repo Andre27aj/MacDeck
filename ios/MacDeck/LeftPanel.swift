@@ -11,6 +11,7 @@ struct LeftPanel: View {
             VStack(spacing: 8) {
                 VolumeCard(vm: vm)
                 MediaCard(vm: vm)
+                MutePanel(vm: vm)
             }
         }
     }
@@ -96,9 +97,9 @@ struct PortraitControls: View {
     private func mediaBtn(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(Color(hex: "10b981"))
-                .frame(width: 36, height: 36)
+                .frame(width: 46, height: 46)
                 .background(Color(hex: "222222"))
                 .cornerRadius(8)
         }
@@ -347,8 +348,6 @@ struct MediaCard: View {
                 mediaBtn("backward.fill") { vm.prevTrack() }
                 mediaBtn("playpause.fill") { vm.playPause() }
                 mediaBtn("forward.fill")  { vm.nextTrack() }
-                muteBtn(icon: vm.micMuted ? "mic.slash.fill" : "mic.fill", active: vm.micMuted) { vm.toggleMicMute() }
-                muteBtn(icon: vm.muted ? "speaker.slash.fill" : "speaker.wave.2.fill", active: vm.muted) { vm.toggleMute() }
             }
         }
         .padding(12)
@@ -361,25 +360,11 @@ struct MediaCard: View {
     private func mediaBtn(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(Color(hex: "10b981"))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 9)
+                .padding(.vertical, 14)
                 .background(Color(hex: "222222"))
-                .cornerRadius(8)
-        }
-        .buttonStyle(ScaleButtonStyle())
-    }
-
-    @ViewBuilder
-    private func muteBtn(icon: String, active: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(active ? .white : Color(hex: "ef4444"))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 9)
-                .background(active ? Color(hex: "ef4444") : Color(hex: "222222"))
                 .cornerRadius(8)
         }
         .buttonStyle(ScaleButtonStyle())

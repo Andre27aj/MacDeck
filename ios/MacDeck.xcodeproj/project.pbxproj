@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0F316C98B64853646653A452 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10991C0EAFF087AFED612079 /* ViewModel.swift */; };
 		20CEE8296F48C66553FF6221 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E5CB3B4902D91BD532A39C /* APIClient.swift */; };
+		228E1AAF343864FD22A07FB8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2AC8B9A4B5220B5B26CCB823 /* Assets.xcassets */; };
 		3682C10C52961C5DB6DF9811 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB480DFE1A54467C0027334 /* ContentView.swift */; };
 		400CBEA2672E971FBCA3B020 /* CustomApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A4D5354E02F7993441B7FA /* CustomApp.swift */; };
 		5CBCA8E2CCC71F696F4F65A9 /* ServiceDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70AA4DC7668156F96F753890 /* ServiceDiscovery.swift */; };
@@ -25,6 +26,7 @@
 		069F8A81D63885FF4E972874 /* LeftPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeftPanel.swift; sourceTree = "<group>"; };
 		10991C0EAFF087AFED612079 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 		239BA1AE4EB8468DDF905F23 /* AppEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEditorView.swift; sourceTree = "<group>"; };
+		2AC8B9A4B5220B5B26CCB823 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		32E5CB3B4902D91BD532A39C /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		4D484D8311B03D64C563C6C7 /* MacDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDeckApp.swift; sourceTree = "<group>"; };
 		55A4D5354E02F7993441B7FA /* CustomApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomApp.swift; sourceTree = "<group>"; };
@@ -44,6 +46,7 @@
 			children = (
 				32E5CB3B4902D91BD532A39C /* APIClient.swift */,
 				239BA1AE4EB8468DDF905F23 /* AppEditorView.swift */,
+				2AC8B9A4B5220B5B26CCB823 /* Assets.xcassets */,
 				BEB480DFE1A54467C0027334 /* ContentView.swift */,
 				55A4D5354E02F7993441B7FA /* CustomApp.swift */,
 				AD7C482412C5A4CF8674F466 /* DeckGrid.swift */,
@@ -83,6 +86,7 @@
 			buildConfigurationList = FAB547B804DFB4B79D6B48F8 /* Build configuration list for PBXNativeTarget "MacDeck" */;
 			buildPhases = (
 				ED0D6B1515CA96286B916FFB /* Sources */,
+				38D4B5249A2FB11CFE244D07 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -127,6 +131,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		38D4B5249A2FB11CFE244D07 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				228E1AAF343864FD22A07FB8 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		ED0D6B1515CA96286B916FFB /* Sources */ = {

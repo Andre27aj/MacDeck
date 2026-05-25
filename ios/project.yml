@@ -29,3 +29,4 @@ targets:
           - "_macdeck._tcp"
           - "_http._tcp"
         UIUserInterfaceStyle: Dark
+        XSAppIconAssets: Assets.xcassets/AppIcon.appiconset

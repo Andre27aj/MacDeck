@@ -24,19 +24,19 @@ struct MutePanel: View {
     @ViewBuilder
     private func muteBtn(icon: String, label: String, active: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(active ? .white : Color(hex: "ef4444"))
                 Text(label)
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 9, weight: .semibold))
                     .foregroundColor(active ? .white.opacity(0.85) : Color(hex: "666666"))
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, 8)
             .background(active ? Color(hex: "ef4444") : Color(hex: "1a1a1a"))
-            .cornerRadius(12)
-            .overlay(RoundedRectangle(cornerRadius: 12)
+            .cornerRadius(10)
+            .overlay(RoundedRectangle(cornerRadius: 10)
                 .stroke(active ? Color(hex: "ef4444") : Color(hex: "2a2a2a"), lineWidth: 1))
         }
         .buttonStyle(ScaleButtonStyle())
