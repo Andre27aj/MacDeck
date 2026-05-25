@@ -322,6 +322,13 @@ app.get('/system/status', async (req, res) => {
       { encoding: 'utf8' }
     ).trim();
   } catch (_) {}
+  try {
+    const out = execSync(
+      `osascript -e 'tell application "System Events" to get name of (processes where background only is false)'`,
+      { encoding: 'utf8' }
+    ).trim();
+    status.runningApps = out.split(', ').map(s => s.trim()).filter(Boolean);
+  } catch (_) {}
   res.json({ success: true, ...status });
 });
 

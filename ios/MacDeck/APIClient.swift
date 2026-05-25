@@ -14,6 +14,7 @@ struct SystemStatus: Decodable {
     var charging: Bool?
     var darkMode: Bool?
     var activeApp: String?
+    var runningApps: [String]?
 }
 
 struct DarkModeResponse: Decodable {

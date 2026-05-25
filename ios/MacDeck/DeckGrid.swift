@@ -53,8 +53,8 @@ struct DeckAction: Identifiable {
         case shortcut, system
         var accent: Color {
             switch self {
-            case .shortcut: return Color(hex: "3b82f6")
-            case .system:   return Color(hex: "f59e0b")
+            case .shortcut: return Color(hex: "6366f1")
+            case .system:   return Color(hex: "8b5cf6")
             }
         }
         var border: Color { accent.opacity(0.35) }
@@ -116,8 +116,13 @@ struct AppDeckButton: View {
     @State private var flashColor: Color? = nil
     @State private var iconURL: URL? = nil
 
-    private var accent: Color {
-        idx < 4 ? Color(hex: "8b5cf6") : Color(hex: "6366f1")
+    private var accent: Color { Color(hex: "6366f1") }
+
+    private var isRunning: Bool {
+        vm.runningApps.contains { r in
+            let r = r.lowercased(), n = app.launchName.lowercased()
+            return r == n || r.contains(n) || n.contains(r)
+        }
     }
 
     var body: some View {
@@ -145,10 +150,10 @@ struct AppDeckButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(flashColor ?? Color(hex: "1a1a1a"))
+            .background(flashColor ?? (isRunning ? Color(hex: "10b981").opacity(0.08) : Color(hex: "1a1a1a")))
             .cornerRadius(12)
             .overlay(RoundedRectangle(cornerRadius: 12)
-                .stroke(accent.opacity(0.35), lineWidth: 1))
+                .stroke(isRunning ? Color(hex: "10b981") : accent.opacity(0.35), lineWidth: isRunning ? 2 : 1))
         }
         .buttonStyle(ScaleButtonStyle())
         .task {

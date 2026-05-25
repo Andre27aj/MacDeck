@@ -21,6 +21,7 @@ class ViewModel: ObservableObject {
     @Published var isDarkMode: Bool = false
     @Published var activeApp: String = ""
     @Published var currentPage: Int = 0
+    @Published var runningApps: Set<String> = []
 
     private var lastActiveProfileApp: String = ""
     private var pollTask: Task<Void, Never>?
@@ -108,6 +109,7 @@ class ViewModel: ObservableObject {
             if let charging = s.charging { isCharging = charging }
             if let dm = s.darkMode { isDarkMode = dm }
             if let app = s.activeApp { activeApp = app }
+            if let apps = s.runningApps { runningApps = Set(apps) }
             if !connected { fetchAudioDevices(); fetchBrightness() }
             connected = true
             updateAutoProfile()
