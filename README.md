@@ -1,84 +1,95 @@
-# MacDeck
+# MacDeck — Serveur Mac
 
-Transforme ton iPhone en StreamDeck pour contrôler ton Mac — volume, luminosité, apps, raccourcis clavier, médias et plus.
+Le serveur Node.js qui fait tourner MacDeck sur ton Mac. Il expose une API REST locale que les clients (app iOS, PWA sur Android/Windows/navigateur) utilisent pour contrôler le Mac.
 
-![Platform](https://img.shields.io/badge/iOS-16%2B-blue) ![Platform](https://img.shields.io/badge/macOS-12%2B-lightgrey) ![License](https://img.shields.io/badge/license-MIT-green)
-
----
-
-## Fonctionnalités
-
-- **Volume & luminosité** — sliders verticaux tactiles
-- **Contrôle média** — play/pause, suivant, précédent (Spotify, Apple Music)
-- **Mute micro & son** — toggle rapide
-- **Grille d'apps** — lance n'importe quelle app macOS en un tap
-- **Raccourcis clavier** — Screenshot, Spotlight, Mission Control, Cmd+Tab, Verrouiller…
-- **Actions système** — Sleep, Ne pas déranger, Vider la corbeille
-- **Icônes automatiques** — les vraies icônes de tes apps macOS
-- **Portrait & paysage** — layout adaptatif
-- **Découverte automatique** — se connecte au Mac via Bonjour sans config manuelle
+![Platform](https://img.shields.io/badge/macOS-12%2B-lightgrey) ![Node](https://img.shields.io/badge/Node.js-18%2B-green) ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
 
-## Prérequis
+## Écosystème MacDeck
 
-| Côté Mac | Côté iPhone |
-|----------|-------------|
-| macOS 12+ | iOS 16+ |
-| Node.js 18+ | Xcode 15+ (pour installer l'app) |
-| Même réseau Wi-Fi que l'iPhone | Même réseau Wi-Fi que le Mac |
+| Repo | Description | Plateforme |
+|------|-------------|------------|
+| **MacDeck** *(ce repo)* | Serveur Mac + interface web | macOS |
+| [MacDeck-iOS](https://github.com/Andre27aj/MacDeck-iOS) | App native Swift | iPhone / iPad |
+| [MacDeck-Windows](https://github.com/Andre27aj/MacDeck-Windows) | Serveur Windows + interface web | Windows |
+
+**L'interface web (PWA) incluse dans ce repo fonctionne sur :**
+- iPhone / iPad (Safari → "Sur l'écran d'accueil")
+- Android (Chrome → "Ajouter à l'écran d'accueil")
+- Windows, Linux, tout navigateur sur le même réseau
+
+---
+
+## Ce que tu peux contrôler
+
+- **Volume & luminosité** — sliders précis
+- **Mute** son et micro indépendamment
+- **Médias** — play/pause, piste suivante/précédente, titre en cours
+- **Grille d'apps** — lance n'importe quelle app macOS, bordure verte si déjà ouverte
+- **Actions système** — verrouiller, veille écran, veille Mac, capture d'écran, vider la corbeille, Ne pas déranger, Mission Control, Spotlight, mode sombre
+- **Raccourcis clavier** — Cmd+Tab, Cmd+Q, et tous les raccourcis personnalisables
+- **Batterie Mac** — affichée en temps réel sur le client
+- **Profils automatiques** — les raccourcis changent selon l'app active (Figma, Xcode, Safari…)
 
 ---
 
 ## Installation
 
-### 1 — Serveur Mac
+### Prérequis
+
+- macOS 12+
+- Node.js 18+ → [nodejs.org](https://nodejs.org)
+- L'appareil client sur le **même réseau Wi-Fi**
+
+### Lancer le serveur
 
 ```bash
-# Cloner le repo
 git clone https://github.com/Andre27aj/MacDeck.git
 cd MacDeck
-
-# Installer les dépendances
 npm install
-
-# Lancer le serveur
 npm start
 ```
 
-Le terminal affiche l'adresse du serveur, ex : `MacDeck running → http://192.168.1.42:3000`
-
-> **Note :** Au premier lancement, macOS peut demander des autorisations réseau — accepte-les.
-
-### 2 — App iOS
-
-```bash
-cd ios
-```
-
-Ouvre `MacDeck.xcodeproj` dans Xcode :
-
-1. Connecte ton iPhone au Mac via câble USB
-2. Dans Xcode, sélectionne ton iPhone comme destination
-3. Change le **Team** dans *Signing & Capabilities* pour ton propre compte Apple
-4. Appuie sur **⌘R** pour compiler et installer
-
-> Tu n'as pas besoin d'un compte Apple Developer payant — un compte gratuit suffit pour installer sur ton propre iPhone.
+Le terminal affiche l'IP du Mac, ex : `MacDeck running → http://192.168.1.42:3000`
 
 ---
 
-## Utilisation
+## Utiliser depuis un navigateur (Android, iPhone, PC…)
 
-1. Lance `npm start` sur le Mac
-2. Ouvre **MacDeck** sur l'iPhone
-3. L'app détecte le Mac automatiquement via Bonjour
-4. Si la connexion échoue, entre l'IP manuellement dans les réglages (icône ⚙️)
+Ouvre `http://<ip-du-mac>:3000` depuis n'importe quel appareil sur le même réseau.
+
+### Installer comme app (PWA)
+
+| Appareil | Comment faire |
+|----------|---------------|
+| **Android** | Chrome → menu ⋮ → "Ajouter à l'écran d'accueil" |
+| **iPhone / iPad** | Safari → icône partage → "Sur l'écran d'accueil" |
+| **Windows / Mac / Linux** | Chrome ou Edge → icône installation dans la barre d'adresse |
+
+Une fois installée, la PWA s'ouvre comme une vraie app (plein écran, sans barre de navigateur). Elle fonctionne aussi hors ligne pour l'interface, mais a besoin du réseau pour communiquer avec le serveur.
+
+> **Android** : aucune installation d'APK nécessaire, Chrome gère tout. L'expérience est proche d'une app native.
 
 ---
 
-## Personnaliser les apps
+## Utiliser l'app iOS native
 
-Tape sur l'icône ✏️ dans la grille pour modifier les apps affichées. Tu peux changer le nom, l'icône SF Symbol et le nom de lancement macOS.
+L'app [MacDeck-iOS](https://github.com/Andre27aj/MacDeck-iOS) offre une meilleure expérience sur iPhone/iPad : détection automatique du Mac via Bonjour (pas besoin d'entrer l'IP), feedback haptique, et gestures natives SwiftUI.
+
+---
+
+## Permissions macOS
+
+Certaines fonctions nécessitent une autorisation dans *Réglages Système → Confidentialité* :
+
+| Fonctionnalité | Permission requise |
+|---|---|
+| Raccourcis clavier (Spotlight, Mission Control…) | Accessibilité → ajouter Terminal ou Node |
+| Contrôle d'autres apps | Automatisation |
+| Capture d'écran | Enregistrement d'écran |
+
+Au premier lancement, macOS affiche des popups d'autorisation — accepte-les.
 
 ---
 
@@ -86,32 +97,47 @@ Tape sur l'icône ✏️ dans la grille pour modifier les apps affichées. Tu pe
 
 ```
 MacDeck/
-├── server.js          # Serveur Express sur le Mac
-├── public/            # Interface web (alternative à l'app native)
-└── ios/
-    └── MacDeck/
-        ├── ContentView.swift      # Layout principal
-        ├── LeftPanel.swift        # Volume, luminosité, médias
-        ├── DeckGrid.swift         # Grille de boutons
-        ├── MutePanel.swift        # Boutons mute micro/son
-        ├── ViewModel.swift        # État & appels API
-        ├── APIClient.swift        # Client HTTP
-        └── ...
+├── server.js          # Serveur Express (toute la logique macOS)
+├── package.json
+└── public/            # Interface web PWA (même réseau → n'importe quel appareil)
+    ├── index.html     # App complète en un seul fichier HTML/CSS/JS
+    ├── manifest.json  # Métadonnées PWA
+    ├── sw.js          # Service worker
+    ├── icon-192.png
+    └── icon-512.png
 ```
 
 ---
 
-## Permissions macOS
+## API — Endpoints
 
-Certaines fonctions nécessitent des autorisations supplémentaires :
-
-- **Raccourcis clavier** (Spotlight, Mission Control…) → *Réglages Système → Confidentialité → Accessibilité* → ajouter Terminal ou Node
-- **Contrôle apps** → *Réglages Système → Confidentialité → Automatisation*
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/system/status` | Volume, mute, médias, batterie, app active, apps ouvertes |
+| POST | `/volume` | `{ value: 0-100 }` |
+| POST | `/mute` | `{ muted: bool }` |
+| POST | `/mic/mute` | Toggle micro |
+| POST | `/media/play-pause` | Play/pause |
+| POST | `/media/next` | Piste suivante |
+| POST | `/media/prev` | Piste précédente |
+| POST | `/launch` | `{ app: "Figma" }` — lance une app macOS |
+| POST | `/shortcut` | `{ keys: ["cmd","space"] }` — raccourci clavier |
+| GET | `/system/brightness` | Luminosité actuelle |
+| POST | `/system/brightness` | `{ value: 0-100 }` |
+| GET | `/audio/devices` | Liste les sorties audio |
+| POST | `/audio/device` | `{ name: "AirPods" }` — change la sortie |
+| POST | `/system/sleep` | Veille Mac |
+| POST | `/system/lock` | Verrouille l'écran |
+| POST | `/system/sleep-display` | Éteint l'écran |
+| POST | `/system/dark-mode` | Bascule mode sombre/clair |
+| POST | `/system/dnd` | Bascule Ne pas déranger |
+| POST | `/system/trash` | Vide la corbeille |
+| GET | `/app-icon` | `?name=Figma` — renvoie l'icône de l'app (PNG) |
 
 ---
 
 ## Limitations
 
-- iPhone et Mac doivent être sur le **même réseau local**
-- Ne fonctionne pas à distance (pas de VPN, pas d'internet)
-- L'app iOS doit être compilée avec Xcode (pas disponible sur l'App Store)
+- Mac et client doivent être sur le **même réseau local**
+- Ne fonctionne pas à distance sans VPN
+- Certaines permissions macOS doivent être accordées manuellement au premier lancement
