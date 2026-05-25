@@ -10,7 +10,6 @@ struct LeftPanel: View {
         } else {
             VStack(spacing: 8) {
                 VolumeCard(vm: vm)
-                MediaCard(vm: vm)
                 MutePanel(vm: vm)
             }
         }
@@ -333,7 +332,7 @@ struct MediaCard: View {
                 Text(vm.nowPlayingTitle.isEmpty ? "—" : vm.nowPlayingTitle)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.white)
-                    .lineLimit(2)
+                    .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if !vm.nowPlayingArtist.isEmpty {
                     Text(vm.nowPlayingArtist)
@@ -342,7 +341,6 @@ struct MediaCard: View {
                         .lineLimit(1)
                 }
             }
-            .frame(maxHeight: .infinity, alignment: .topLeading)
 
             HStack(spacing: 6) {
                 mediaBtn("backward.fill") { vm.prevTrack() }

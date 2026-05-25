@@ -49,7 +49,11 @@ struct ContentView: View {
                         HStack(alignment: .top, spacing: 8) {
                             LeftPanel(vm: vm, isPortrait: false)
                                 .frame(width: geo.size.width * 0.44)
-                            PagedDeckView(vm: vm)
+                            VStack(spacing: 8) {
+                                PagedDeckView(vm: vm)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                MediaCard(vm: vm)
+                            }
                         }
                     }
                 }
