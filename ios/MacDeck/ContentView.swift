@@ -48,7 +48,7 @@ struct ContentView: View {
                     } else {
                         HStack(alignment: .top, spacing: 8) {
                             LeftPanel(vm: vm, isPortrait: false)
-                                .frame(width: geo.size.width * 0.32)
+                                .frame(width: geo.size.width * 0.44)
                             PagedDeckView(vm: vm)
                         }
                     }

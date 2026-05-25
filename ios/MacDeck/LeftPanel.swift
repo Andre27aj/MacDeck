@@ -191,7 +191,7 @@ struct VolumeCard: View {
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "555555"))
                 }
-                .frame(width: 44)
+                .frame(width: 54)
 
                 VStack(spacing: 10) {
                     volBtn("plus")  { vm.adjustVolume(+5) }
@@ -209,7 +209,7 @@ struct VolumeCard: View {
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "555555"))
                 }
-                .frame(width: 44)
+                .frame(width: 54)
             }
             .frame(maxHeight: .infinity)
 
@@ -276,7 +276,7 @@ struct VolumeSliderVertical: View {
                     .shadow(color: .black.opacity(0.4), radius: 3)
                     .padding(.bottom, max(0, h * pct - 14))
             }
-            .frame(width: 44).frame(maxWidth: .infinity)
+            .frame(width: 54).frame(maxWidth: .infinity)
             .contentShape(Rectangle())
             .gesture(DragGesture(minimumDistance: 0)
                 .onChanged { g in value = min(100, max(0, Double((h - g.location.y) / h) * 100)) }
@@ -311,7 +311,7 @@ struct BrightnessSliderVertical: View {
                     .shadow(color: .black.opacity(0.4), radius: 3)
                     .padding(.bottom, max(0, h * pct - 14))
             }
-            .frame(width: 44).frame(maxWidth: .infinity)
+            .frame(width: 54).frame(maxWidth: .infinity)
             .contentShape(Rectangle())
             .gesture(DragGesture(minimumDistance: 0)
                 .onChanged { g in value = min(100, max(0, Double((h - g.location.y) / h) * 100)) }
@@ -350,7 +350,7 @@ struct MediaCard: View {
                 mediaBtn("forward.fill")  { vm.nextTrack() }
             }
         }
-        .padding(12)
+        .padding(8)
         .background(Color(hex: "1a1a1a"))
         .cornerRadius(12)
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: "2a2a2a"), lineWidth: 1))
@@ -360,10 +360,10 @@ struct MediaCard: View {
     private func mediaBtn(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(Color(hex: "10b981"))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(.vertical, 8)
                 .background(Color(hex: "222222"))
                 .cornerRadius(8)
         }
