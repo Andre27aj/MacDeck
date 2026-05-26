@@ -241,13 +241,27 @@
     <p>Adresse IP du Mac (visible dans le terminal où tourne server.js)</p>
     <input type="text" id="ip-inp" placeholder="192.168.1.x" inputmode="decimal" autocomplete="off">
     <button id="savebtn">Se connecter</button>
+
+    <hr style="border-color:#333;margin:16px 0">
+    <h2>🔒 Sécurité</h2>
+    <div id="pair-status"></div>
+    <button id="pair-btn" style="display:none">Jumeler ce Mac</button>
+    <div id="pair-code-section" style="display:none">
+      <p style="color:#aaa;font-size:13px">Un code s'affiche sur le Mac. Entrez-le :</p>
+      <input type="text" id="pair-code-inp" placeholder="000000" inputmode="numeric" maxlength="6"
+             style="letter-spacing:8px;font-size:24px;text-align:center;font-family:monospace">
+      <button id="pair-confirm-btn">Confirmer</button>
+      <div id="pair-error" style="color:#ef4444;font-size:13px;margin-top:8px"></div>
+    </div>
+    <button id="unpair-btn" style="display:none;background:#ef4444">Dissocier</button>
   </div>
 </div>
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────────
-let macIP = localStorage.getItem('macIP') || '';
-let base  = macIP ? `http://${macIP}:3000` : '';
+let macIP     = localStorage.getItem('macIP')      || '';
+let pairToken = localStorage.getItem('pairToken')  || '';
+let base      = macIP ? `http://${macIP}:3000` : '';
 let vol = 50, brt = 100, muted = false, micMuted = false;
 let running = [], pollTimer = null;
 
@@ -279,11 +293,18 @@ const SYS = [
 // ── API ────────────────────────────────────────────────────────────────────────
 async function req(method, path, body) {
   try {
+    const headers = {'Content-Type':'application/json'};
+    if (pairToken) headers['X-MacDeck-Token'] = pairToken;
     const r = await fetch(base + path, {
-      method, headers:{'Content-Type':'application/json'},
+      method, headers,
       body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(5000),
     });
+    if (r.status === 401) {
+      showBanner('err','🔒 Non jumelé — ouvre ⚙ et jumele le Mac');
+      updatePairUI();
+      return {success:false};
+    }
     const d = await r.json();
     showBanner(null);
     return d;
@@ -506,9 +527,80 @@ function startPoll() {
   if (base) pollTimer = setInterval(sync, 5000);
 }
 
+// ── Pairing ───────────────────────────────────────────────────────────────────
+function updatePairUI() {
+  const paired = !!pairToken;
+  document.getElementById('pair-status').textContent = paired
+    ? '✅ Jumelé avec ce Mac' : '⚠️ Non jumelé';
+  document.getElementById('pair-status').style.color = paired ? '#10b981' : '#f59e0b';
+  document.getElementById('pair-btn').style.display        = paired ? 'none' : '';
+  document.getElementById('unpair-btn').style.display      = paired ? '' : 'none';
+  document.getElementById('pair-code-section').style.display = 'none';
+  document.getElementById('pair-error').textContent = '';
+}
+
+document.getElementById('pair-btn').addEventListener('click', async () => {
+  document.getElementById('pair-btn').disabled = true;
+  document.getElementById('pair-btn').textContent = 'Connexion…';
+  try {
+    const headers = {'Content-Type':'application/json'};
+    const r = await fetch(base + '/pair/request', { method:'POST', headers, signal: AbortSignal.timeout(8000) });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('pair-code-section').style.display = '';
+      document.getElementById('pair-code-inp').value = '';
+      document.getElementById('pair-code-inp').focus();
+    } else {
+      document.getElementById('pair-error').textContent = 'Erreur — relance un jumelage';
+      document.getElementById('pair-code-section').style.display = '';
+    }
+  } catch {
+    document.getElementById('pair-error').textContent = 'Mac inaccessible';
+    document.getElementById('pair-code-section').style.display = '';
+  }
+  document.getElementById('pair-btn').disabled = false;
+  document.getElementById('pair-btn').textContent = 'Jumeler ce Mac';
+});
+
+document.getElementById('pair-confirm-btn').addEventListener('click', async () => {
+  const code = document.getElementById('pair-code-inp').value.trim();
+  if (code.length !== 6) { document.getElementById('pair-error').textContent = 'Code à 6 chiffres'; return; }
+  document.getElementById('pair-confirm-btn').disabled = true;
+  try {
+    const r = await fetch(base + '/pair/confirm', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({code}),
+      signal: AbortSignal.timeout(5000),
+    });
+    const d = await r.json();
+    if (d.success && d.token) {
+      pairToken = d.token;
+      localStorage.setItem('pairToken', pairToken);
+      updatePairUI();
+      showBanner(null);
+      sync(); startPoll();
+    } else {
+      const msg = d.error === 'wrong_code'        ? 'Code incorrect'
+                : d.error === 'expired'            ? 'Code expiré — recommence'
+                : d.error === 'too_many_attempts'  ? 'Trop de tentatives'
+                : 'Erreur inconnue';
+      document.getElementById('pair-error').textContent = msg;
+    }
+  } catch { document.getElementById('pair-error').textContent = 'Erreur de connexion'; }
+  document.getElementById('pair-confirm-btn').disabled = false;
+});
+
+document.getElementById('unpair-btn').addEventListener('click', () => {
+  pairToken = '';
+  localStorage.removeItem('pairToken');
+  updatePairUI();
+});
+
 // ── Settings ──────────────────────────────────────────────────────────────────
 document.getElementById('settings-btn').addEventListener('click', () => {
   document.getElementById('ip-inp').value = macIP;
+  updatePairUI();
   document.getElementById('overlay').classList.add('show');
 });
 document.getElementById('overlay').addEventListener('click', e => {
