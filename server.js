@@ -70,7 +70,9 @@ app.post('/launch', async (req, res) => {
   const { app: appName } = req.body;
   if (!appName) return res.json({ success: false, error: 'app required' });
   try {
-    await run(`open -a "${appName.replace(/"/g, '')}"`);
+    const isURL = appName.startsWith('http://') || appName.startsWith('https://');
+    const cmd = isURL ? `open "${appName.replace(/"/g, '')}"` : `open -a "${appName.replace(/"/g, '')}"`;
+    await run(cmd);
     res.json({ success: true });
   } catch (e) {
     res.json({ success: false, error: e.message });

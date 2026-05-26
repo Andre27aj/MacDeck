@@ -4,6 +4,8 @@ import SwiftUI
 
 func iconForApp(_ name: String) -> String {
     let l = name.lowercased()
+    if l.hasPrefix("http://") || l.hasPrefix("https://") { return "globe" }
+    if l.contains("youtube")                        { return "play.rectangle" }
     if l.contains("safari")                        { return "safari" }
     if l.contains("code") || l.contains("vscode")  { return "curlybraces.square" }
     if l.contains("terminal") || l.contains("iterm"){ return "terminal" }
@@ -155,25 +157,18 @@ struct AppDetailEditor: View {
                     }
                     .listRowBackground(Color.clear)
 
-                    // App picker
-                    Section("Application") {
+                    // App picker or URL
+                    Section("Application ou URL") {
                         Button {
                             if installedApps.isEmpty { fetchApps() }
                             showPicker = true
                         } label: {
                             HStack {
-                                Image(systemName: sfSymbol)
+                                Image(systemName: "square.grid.2x2")
                                     .foregroundColor(Color(hex: "8b5cf6"))
                                     .frame(width: 28)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(launchName.isEmpty ? "Choisir une app…" : launchName)
-                                        .foregroundColor(launchName.isEmpty ? Color(hex: "555555") : .white)
-                                    if !displayName.isEmpty && displayName != launchName {
-                                        Text("Affiché : \(displayName)")
-                                            .font(.caption)
-                                            .foregroundColor(Color(hex: "555555"))
-                                    }
-                                }
+                                Text("Choisir une app installée…")
+                                    .foregroundColor(Color(hex: "888888"))
                                 Spacer()
                                 if loadingApps {
                                     ProgressView().scaleEffect(0.8)
@@ -183,6 +178,20 @@ struct AppDetailEditor: View {
                                         .foregroundColor(Color(hex: "444444"))
                                 }
                             }
+                        }
+
+                        HStack {
+                            Image(systemName: launchName.hasPrefix("http") ? "globe" : "keyboard")
+                                .foregroundColor(Color(hex: "8b5cf6"))
+                                .frame(width: 28)
+                            TextField("Nom d'app ou URL (https://...)", text: $launchName)
+                                .foregroundColor(.white)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.URL)
+                                .onChange(of: launchName) { val in
+                                    sfSymbol = iconForApp(val)
+                                }
                         }
                     }
                     .listRowBackground(Color(hex: "1a1a1a"))
@@ -265,7 +274,11 @@ struct AppDetailEditor: View {
     }
 
     private func save() {
-        let name = displayName.isEmpty ? launchName : displayName
+        var name = displayName.isEmpty ? launchName : displayName
+        if displayName.isEmpty && launchName.hasPrefix("http"),
+           let host = URL(string: launchName)?.host {
+            name = host.replacingOccurrences(of: "www.", with: "")
+        }
         if let idx = vm.customApps.firstIndex(where: { $0.id == app.id }) {
             vm.customApps[idx].displayName = name
             vm.customApps[idx].launchName  = launchName
