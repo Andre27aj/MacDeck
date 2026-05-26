@@ -167,7 +167,7 @@ struct AppDetailEditor: View {
                                 Image(systemName: "square.grid.2x2")
                                     .foregroundColor(Color(hex: "8b5cf6"))
                                     .frame(width: 28)
-                                Text("Choisir une app installée…")
+                                Text("Choisir une app…")
                                     .foregroundColor(Color(hex: "888888"))
                                 Spacer()
                                 if loadingApps {
@@ -242,6 +242,7 @@ struct AppDetailEditor: View {
             .sheet(isPresented: $showPicker) {
                 AppPickerView(
                     installedApps: installedApps,
+                    runningApps: Array(vm.runningApps).sorted(),
                     loading: loadingApps,
                     selectedName: launchName
                 ) { chosen in
@@ -284,6 +285,7 @@ struct AppDetailEditor: View {
             vm.customApps[idx].launchName  = launchName
             vm.customApps[idx].sfSymbol    = sfSymbol
         }
+        vm.pinApp(launchName)
         dismiss()
     }
 }
@@ -292,6 +294,7 @@ struct AppDetailEditor: View {
 
 struct AppPickerView: View {
     let installedApps: [String]
+    let runningApps: [String]
     let loading: Bool
     let selectedName: String
     let onSelect: (String) -> Void
@@ -299,10 +302,16 @@ struct AppPickerView: View {
     @State private var search = ""
     @Environment(\.dismiss) var dismiss
 
-    var filtered: [String] {
-        search.isEmpty ? installedApps : installedApps.filter {
-            $0.localizedCaseInsensitiveContains(search)
-        }
+    var filteredRunning: [String] {
+        let q = search.lowercased()
+        return q.isEmpty ? runningApps : runningApps.filter { $0.localizedCaseInsensitiveContains(q) }
+    }
+
+    var filteredInstalled: [String] {
+        let q = search.lowercased()
+        let all = q.isEmpty ? installedApps : installedApps.filter { $0.localizedCaseInsensitiveContains(q) }
+        let runningSet = Set(runningApps)
+        return all.filter { !runningSet.contains($0) }
     }
 
     var body: some View {
@@ -311,7 +320,7 @@ struct AppPickerView: View {
                 Color(hex: "0d0d0d").ignoresSafeArea()
 
                 Group {
-                    if loading {
+                    if loading && installedApps.isEmpty {
                         VStack(spacing: 12) {
                             ProgressView()
                             Text("Chargement des apps…")
@@ -320,31 +329,36 @@ struct AppPickerView: View {
                         }
                     } else {
                         List {
-                            ForEach(filtered, id: \.self) { appName in
-                                Button { onSelect(appName) } label: {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: iconForApp(appName))
-                                            .font(.system(size: 18))
-                                            .foregroundColor(Color(hex: "8b5cf6"))
-                                            .frame(width: 28)
-                                        Text(appName)
-                                            .foregroundColor(.white)
-                                        Spacer()
-                                        if appName == selectedName {
-                                            Image(systemName: "checkmark")
-                                                .foregroundColor(Color(hex: "8b5cf6"))
-                                        }
+                            if !filteredRunning.isEmpty {
+                                Section {
+                                    ForEach(filteredRunning, id: \.self) { appName in
+                                        appRow(appName, running: true)
                                     }
+                                } header: {
+                                    Label("En cours", systemImage: "circle.fill")
+                                        .foregroundColor(Color(hex: "10b981"))
+                                        .font(.caption.weight(.semibold))
                                 }
-                                .listRowBackground(Color(hex: "1a1a1a"))
+                            }
+
+                            if !filteredInstalled.isEmpty {
+                                Section {
+                                    ForEach(filteredInstalled, id: \.self) { appName in
+                                        appRow(appName, running: false)
+                                    }
+                                } header: {
+                                    Text("Toutes les apps")
+                                        .foregroundColor(Color(hex: "555555"))
+                                        .font(.caption.weight(.semibold))
+                                }
                             }
                         }
-                        .listStyle(.plain)
+                        .listStyle(.insetGrouped)
                         .scrollContentBackground(.hidden)
                     }
                 }
             }
-            .navigationTitle("\(filtered.count) apps")
+            .navigationTitle("Choisir une app")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $search, prompt: "Rechercher…")
             .toolbar {
@@ -354,5 +368,29 @@ struct AppPickerView: View {
             }
         }
         .preferredColorScheme(.dark)
+    }
+
+    private func appRow(_ appName: String, running: Bool) -> some View {
+        Button { onSelect(appName) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: iconForApp(appName))
+                    .font(.system(size: 18))
+                    .foregroundColor(running ? Color(hex: "10b981") : Color(hex: "8b5cf6"))
+                    .frame(width: 28)
+                Text(appName)
+                    .foregroundColor(.white)
+                if running {
+                    Circle()
+                        .fill(Color(hex: "10b981"))
+                        .frame(width: 6, height: 6)
+                }
+                Spacer()
+                if appName == selectedName {
+                    Image(systemName: "checkmark")
+                        .foregroundColor(Color(hex: "8b5cf6"))
+                }
+            }
+        }
+        .listRowBackground(Color(hex: "1a1a1a"))
     }
 }

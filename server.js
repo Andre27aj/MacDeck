@@ -151,7 +151,10 @@ const NATIVE_SHORTCUTS = {
   'cmd+space':   async () => osascript('do shell script "open -b com.apple.Spotlight"'),
   'cmd+ctrl+q':  async () => osascript('do shell script "open -a ScreenSaverEngine"'),
   'F3':          async () => osascript('do shell script "open -b com.apple.exposelauncher"'),
-  'cmd+q':       async () => osascript('tell application "System Events" to keystroke "q" using command down'),
+  'cmd+q':       async () => {
+    const front = await osascript('tell application "System Events" to name of first process whose frontmost is true');
+    await osascript(`tell application "${front.trim()}" to quit`);
+  },
   'cmd+tab':     async () => osascript(`tell application "System Events"\nkey down command\nkey code 48\ndelay 0.05\nkey up command\nend tell`),
 };
 

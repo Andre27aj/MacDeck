@@ -14,12 +14,10 @@ struct CustomApp: Codable, Identifiable {
     }
 
     static let defaults: [CustomApp] = [
-        // Row 1 — violet
         .init(displayName: "Safari",   launchName: "Safari",             sfSymbol: "safari"),
         .init(displayName: "VS Code",  launchName: "Visual Studio Code", sfSymbol: "curlybraces.square"),
         .init(displayName: "Terminal", launchName: "Terminal",           sfSymbol: "terminal"),
         .init(displayName: "Spotify",  launchName: "Spotify",            sfSymbol: "music.note"),
-        // Row 2 — indigo
         .init(displayName: "Discord",  launchName: "Discord",            sfSymbol: "bubble.left.and.bubble.right"),
         .init(displayName: "Finder",   launchName: "Finder",             sfSymbol: "folder"),
         .init(displayName: "Mail",     launchName: "Mail",               sfSymbol: "envelope"),

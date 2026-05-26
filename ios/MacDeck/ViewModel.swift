@@ -109,11 +109,57 @@ class ViewModel: ObservableObject {
             if let charging = s.charging { isCharging = charging }
             if let dm = s.darkMode { isDarkMode = dm }
             if let app = s.activeApp { activeApp = app }
-            if let apps = s.runningApps { runningApps = Set(apps) }
+            if let apps = s.runningApps {
+                runningApps = Set(apps)
+                autoAddRunningApps(Set(apps))
+            }
             if !connected { fetchAudioDevices(); fetchBrightness() }
             connected = true
             updateAutoProfile()
         } catch { connected = false }
+    }
+
+    private let systemProcessFilter: Set<String> = [
+        "Dock", "SystemUIServer", "loginwindow", "WindowServer",
+        "Spotlight", "Control Center", "Notification Center",
+        "AirPlayUIAgent", "CoreLocationAgent", "universalaccessd",
+        "MacDeck"
+    ]
+
+    private var autoAdded: Set<String> = {
+        Set(UserDefaults.standard.stringArray(forKey: "autoAdded") ?? [])
+    }()
+
+    private func saveAutoAdded() {
+        UserDefaults.standard.set(Array(autoAdded), forKey: "autoAdded")
+    }
+
+    func pinApp(_ launchName: String) {
+        autoAdded.remove(launchName)
+        saveAutoAdded()
+    }
+
+    private func autoAddRunningApps(_ apps: Set<String>) {
+        // Deduplicate
+        var seen = Set<String>()
+        customApps = customApps.filter { seen.insert($0.launchName).inserted }
+
+        // Remove auto-added apps that are no longer running
+        let toRemove = autoAdded.filter { !apps.contains($0) }
+        if !toRemove.isEmpty {
+            customApps.removeAll { toRemove.contains($0.launchName) }
+            autoAdded.subtract(toRemove)
+            saveAutoAdded()
+        }
+
+        // Add new running apps not yet in the grid
+        let existing = Set(customApps.map(\.launchName))
+        let toAdd = apps.subtracting(existing).subtracting(systemProcessFilter).sorted()
+        for name in toAdd {
+            customApps.append(CustomApp(displayName: name, launchName: name, sfSymbol: iconForApp(name)))
+            autoAdded.insert(name)
+        }
+        if !toAdd.isEmpty { saveAutoAdded() }
     }
 
     private func updateAutoProfile() {
