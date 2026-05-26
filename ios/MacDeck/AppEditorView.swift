@@ -120,6 +120,7 @@ struct AppDetailEditor: View {
     @State private var displayName: String
     @State private var launchName: String
     @State private var sfSymbol: String
+    @State private var isPinned: Bool
     @State private var showPicker = false
     @State private var installedApps: [String] = []
     @State private var loadingApps = false
@@ -129,6 +130,7 @@ struct AppDetailEditor: View {
         _displayName = State(initialValue: app.displayName)
         _launchName  = State(initialValue: app.launchName)
         _sfSymbol    = State(initialValue: app.sfSymbol)
+        _isPinned    = State(initialValue: app.isPinned)
     }
 
     var body: some View {
@@ -203,6 +205,26 @@ struct AppDetailEditor: View {
                             .autocorrectionDisabled()
                     } header: {
                         Text("Surnom (optionnel)")
+                    }
+                    .listRowBackground(Color(hex: "1a1a1a"))
+
+                    // Pin to base panel
+                    Section {
+                        Toggle(isOn: $isPinned) {
+                            HStack(spacing: 10) {
+                                Image(systemName: isPinned ? "pin.fill" : "pin.slash")
+                                    .foregroundColor(isPinned ? Color(hex: "8b5cf6") : Color(hex: "555555"))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Panel de base")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 15))
+                                    Text(isPinned ? "Reste même si l'app est fermée" : "Disparaît quand l'app est fermée")
+                                        .foregroundColor(Color(hex: "555555"))
+                                        .font(.system(size: 12))
+                                }
+                            }
+                        }
+                        .tint(Color(hex: "8b5cf6"))
                     }
                     .listRowBackground(Color(hex: "1a1a1a"))
 
@@ -284,8 +306,8 @@ struct AppDetailEditor: View {
             vm.customApps[idx].displayName = name
             vm.customApps[idx].launchName  = launchName
             vm.customApps[idx].sfSymbol    = sfSymbol
+            vm.customApps[idx].isPinned    = isPinned
         }
-        vm.pinApp(launchName)
         dismiss()
     }
 }

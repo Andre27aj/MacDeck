@@ -70,30 +70,36 @@ struct DeckGrid: View {
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
 
+    private var baseApps: [CustomApp] { vm.customApps.filter(\.isPinned) }
+    private var liveApps: [CustomApp] { vm.customApps.filter { !$0.isPinned } }
+
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            if isPortrait {
-                GeometryReader { geo in
-                    let rows = max(1, Int(ceil(Double(vm.customApps.count) / 4.0)))
-                    let btnH = (geo.size.height - CGFloat(rows - 1) * 8) / CGFloat(rows)
-                    LazyVGrid(columns: columns, spacing: 8) {
-                        ForEach(Array(vm.customApps.enumerated()), id: \.element.id) { idx, app in
-                            AppDeckButton(app: app, idx: idx, vm: vm)
-                                .frame(height: btnH)
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+
+                    // ── Base panel ──────────────────────────────────────
+                    if !baseApps.isEmpty {
+                        sectionHeader("Base", icon: "pin.fill", color: Color(hex: "8b5cf6"))
+                        LazyVGrid(columns: columns, spacing: 8) {
+                            ForEach(baseApps) { app in
+                                AppDeckButton(app: app, vm: vm)
+                            }
                         }
                     }
-                }
-            } else {
-                ScrollView(showsIndicators: false) {
-                    LazyVGrid(columns: columns, spacing: 8) {
-                        ForEach(Array(vm.customApps.enumerated()), id: \.element.id) { idx, app in
-                            AppDeckButton(app: app, idx: idx, vm: vm)
+
+                    // ── En cours ────────────────────────────────────────
+                    if !liveApps.isEmpty {
+                        sectionHeader("En cours", icon: "circle.fill", color: Color(hex: "10b981"))
+                        LazyVGrid(columns: columns, spacing: 8) {
+                            ForEach(liveApps) { app in
+                                AppDeckButton(app: app, vm: vm)
+                            }
                         }
                     }
                 }
             }
 
-            // Edit apps button
             Button { showEditor = true } label: {
                 Image(systemName: "pencil")
                     .font(.system(size: 12, weight: .semibold))
@@ -105,18 +111,29 @@ struct DeckGrid: View {
             AppEditorView(vm: vm)
         }
     }
+
+    private func sectionHeader(_ title: String, icon: String, color: Color) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 7))
+                .foregroundColor(color)
+            Text(title)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(color)
+        }
+        .padding(.top, 10)
+        .padding(.bottom, 6)
+        .padding(.leading, 2)
+    }
 }
 
 // ── App button (dynamic) ──────────────────────────────────────────────────────
 
 struct AppDeckButton: View {
     let app: CustomApp
-    let idx: Int
     @ObservedObject var vm: ViewModel
     @State private var flashColor: Color? = nil
     @State private var iconURL: URL? = nil
-
-    private var accent: Color { Color(hex: "6366f1") }
 
     private var isRunning: Bool {
         vm.runningApps.contains { r in
@@ -125,35 +142,44 @@ struct AppDeckButton: View {
         }
     }
 
+    private var accentColor: Color {
+        app.isPinned ? Color(hex: "6366f1") : Color(hex: "10b981")
+    }
+
     var body: some View {
         Button(action: handleTap) {
             VStack(spacing: 4) {
-                Group {
-                    if let iconURL {
-                        AsyncImage(url: iconURL) { phase in
-                            if let img = phase.image {
-                                img.resizable().scaledToFit()
-                                    .frame(width: 42, height: 42)
-                                    .cornerRadius(10)
-                            } else {
-                                fallbackIcon
+                ZStack(alignment: .topTrailing) {
+                    Group {
+                        if let iconURL {
+                            AsyncImage(url: iconURL) { phase in
+                                if let img = phase.image {
+                                    img.resizable().scaledToFit()
+                                        .frame(width: 42, height: 42)
+                                        .cornerRadius(10)
+                                } else { fallbackIcon }
                             }
-                        }
-                    } else {
-                        fallbackIcon
+                        } else { fallbackIcon }
+                    }
+                    // Dot vert = running, visible uniquement sur les apps de base
+                    if app.isPinned && isRunning {
+                        Circle()
+                            .fill(Color(hex: "10b981"))
+                            .frame(width: 7, height: 7)
+                            .offset(x: 2, y: -2)
                     }
                 }
                 Text(app.displayName)
                     .font(.system(size: 9, weight: .semibold))
-                    .foregroundColor(Color(hex: "888888"))
+                    .foregroundColor(app.isPinned ? Color(hex: "888888") : Color(hex: "10b981"))
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(flashColor ?? (isRunning ? Color(hex: "10b981").opacity(0.08) : Color(hex: "1a1a1a")))
+            .background(flashColor ?? Color(hex: "1a1a1a"))
             .cornerRadius(12)
             .overlay(RoundedRectangle(cornerRadius: 12)
-                .stroke(isRunning ? Color(hex: "10b981") : accent.opacity(0.35), lineWidth: isRunning ? 2 : 1))
+                .stroke(accentColor.opacity(app.isPinned ? 0.35 : 0.6), lineWidth: app.isPinned ? 1 : 1.5))
         }
         .buttonStyle(ScaleButtonStyle())
         .task {
@@ -164,7 +190,7 @@ struct AppDeckButton: View {
     private var fallbackIcon: some View {
         Image(systemName: app.sfSymbol)
             .font(.system(size: 26, weight: .medium))
-            .foregroundColor(accent)
+            .foregroundColor(accentColor)
             .frame(width: 42, height: 42)
     }
 
