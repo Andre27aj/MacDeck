@@ -22,6 +22,11 @@ class ViewModel: ObservableObject {
     @Published var activeApp: String = ""
     @Published var currentPage: Int = 0
     @Published var runningApps: Set<String> = []
+    @Published var isPaired:            Bool   = false
+    @Published var needsPairing:        Bool   = false
+    @Published var showPairingCodeEntry:Bool   = false
+    @Published var pairingError:        String? = nil
+    @Published var pairingPhase:        PairingPhase = .idle
 
     private var lastActiveProfileApp: String = ""
     private var pollTask: Task<Void, Never>?
@@ -36,6 +41,10 @@ class ViewModel: ObservableObject {
         let saved = UserDefaults.standard.string(forKey: "macIP") ?? ""
         macIP = saved
         APIClient.baseURL = saved.isEmpty ? "" : "http://\(saved):3000"
+
+        let savedToken = UserDefaults.standard.string(forKey: "pairToken") ?? ""
+        APIClient.token = savedToken
+        isPaired = !savedToken.isEmpty
 
         customApps = {
             guard let data = UserDefaults.standard.data(forKey: "customApps"),
@@ -116,7 +125,64 @@ class ViewModel: ObservableObject {
             if !connected { fetchAudioDevices(); fetchBrightness() }
             connected = true
             updateAutoProfile()
-        } catch { connected = false }
+        } catch let e as APIError where e == .unauthorized {
+            connected     = true
+            isPaired      = false
+            needsPairing  = true
+        } catch {
+            connected = false
+        }
+    }
+
+    // ── Pairing ───────────────────────────────────────────────────────────────────
+
+    func requestPairing() async {
+        guard !macIP.isEmpty else { return }
+        pairingPhase = .requesting
+        pairingError = nil
+        do {
+            let r: ServerResponse = try await APIClient.post("/pair/request")
+            if r.success {
+                showPairingCodeEntry = true
+            } else {
+                pairingError = "Le Mac a refusé la demande"
+            }
+        } catch {
+            pairingError = "Impossible de joindre le Mac"
+        }
+        pairingPhase = .idle
+    }
+
+    func confirmPairing(code: String) async {
+        pairingPhase = .confirming
+        pairingError = nil
+        do {
+            let r: PairConfirmResponse = try await APIClient.post("/pair/confirm", body: ["code": code])
+            if r.success, let token = r.token {
+                APIClient.token = token
+                UserDefaults.standard.set(token, forKey: "pairToken")
+                isPaired             = true
+                needsPairing         = false
+                showPairingCodeEntry = false
+            } else {
+                switch r.error {
+                case "wrong_code":        pairingError = "Code incorrect"
+                case "expired":           pairingError = "Code expiré — relance un jumelage"
+                case "too_many_attempts": pairingError = "Trop de tentatives — relance un jumelage"
+                default:                  pairingError = "Erreur inconnue"
+                }
+            }
+        } catch {
+            pairingError = "Erreur de connexion"
+        }
+        pairingPhase = .idle
+    }
+
+    func unpair() {
+        APIClient.token = ""
+        UserDefaults.standard.removeObject(forKey: "pairToken")
+        isPaired     = false
+        needsPairing = true
     }
 
     private let systemProcessFilter: Set<String> = [
@@ -126,40 +192,26 @@ class ViewModel: ObservableObject {
         "MacDeck"
     ]
 
-    private var autoAdded: Set<String> = {
-        Set(UserDefaults.standard.stringArray(forKey: "autoAdded") ?? [])
-    }()
-
-    private func saveAutoAdded() {
-        UserDefaults.standard.set(Array(autoAdded), forKey: "autoAdded")
-    }
-
     func pinApp(_ launchName: String) {
-        autoAdded.remove(launchName)
-        saveAutoAdded()
+        if let idx = customApps.firstIndex(where: { $0.launchName == launchName }) {
+            customApps[idx].isPinned = true
+        }
     }
 
     private func autoAddRunningApps(_ apps: Set<String>) {
-        // Deduplicate
+        // Deduplicate by launchName
         var seen = Set<String>()
         customApps = customApps.filter { seen.insert($0.launchName).inserted }
 
-        // Remove auto-added apps that are no longer running
-        let toRemove = autoAdded.filter { !apps.contains($0) }
-        if !toRemove.isEmpty {
-            customApps.removeAll { toRemove.contains($0.launchName) }
-            autoAdded.subtract(toRemove)
-            saveAutoAdded()
-        }
+        // Remove unpinned apps that are no longer running
+        customApps.removeAll { !$0.isPinned && !apps.contains($0.launchName) }
 
         // Add new running apps not yet in the grid
         let existing = Set(customApps.map(\.launchName))
         let toAdd = apps.subtracting(existing).subtracting(systemProcessFilter).sorted()
         for name in toAdd {
-            customApps.append(CustomApp(displayName: name, launchName: name, sfSymbol: iconForApp(name)))
-            autoAdded.insert(name)
+            customApps.append(CustomApp(displayName: name, launchName: name, sfSymbol: iconForApp(name), isPinned: false))
         }
-        if !toAdd.isEmpty { saveAutoAdded() }
     }
 
     private func updateAutoProfile() {

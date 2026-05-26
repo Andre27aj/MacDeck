@@ -15,3 +15,4 @@ ios/DerivedData/
 
 # macOS
 .DS_Store
+.macdeck-tokens

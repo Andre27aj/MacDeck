@@ -5,12 +5,14 @@ struct CustomApp: Codable, Identifiable {
     var displayName: String
     var launchName: String
     var sfSymbol: String
+    var isPinned: Bool
 
-    init(id: UUID = UUID(), displayName: String, launchName: String, sfSymbol: String = "app") {
+    init(id: UUID = UUID(), displayName: String, launchName: String, sfSymbol: String = "app", isPinned: Bool = true) {
         self.id = id
         self.displayName = displayName
         self.launchName = launchName
         self.sfSymbol = sfSymbol
+        self.isPinned = isPinned
     }
 
     static let defaults: [CustomApp] = [
@@ -24,7 +26,6 @@ struct CustomApp: Codable, Identifiable {
         .init(displayName: "Notion",   launchName: "Notion",             sfSymbol: "doc.text"),
     ]
 
-    // Curated symbols available in the editor
     static let availableSymbols: [String] = [
         "safari","curlybraces.square","terminal","music.note","bubble.left.and.bubble.right",
         "folder","envelope","calendar","clock","photo","film","mic","headphones",

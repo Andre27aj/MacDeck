@@ -22,6 +22,20 @@ struct ContentView: View {
                     .background(Color(hex: "3b82f6"))
                     .cornerRadius(8)
                     .transition(.move(edge: .top).combined(with: .opacity))
+                } else if vm.needsPairing {
+                    Button { showSettings = true } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "lock.open.fill")
+                            Text("Non jumelé — Appuie pour jumeler le Mac")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 5)
+                        .background(Color(hex: "f59e0b"))
+                        .cornerRadius(8)
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 } else if !vm.connected {
                     HStack(spacing: 6) {
                         Image(systemName: "wifi.slash")
