@@ -102,13 +102,18 @@
       background:var(--card);min-height:62px;transition:transform .1s,background .15s,border-color .15s;
       position:relative;}
     .dbtn:active{transform:scale(.91);}
-    .dbtn .dicon{font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;}
+    .dbtn .dicon{font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;position:relative;}
     .dbtn .dicon img{width:36px;height:36px;border-radius:8px;object-fit:cover;}
     .dbtn .dlbl{font-size:9px;font-weight:600;color:var(--dim);text-align:center;
       line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-    /* Running app */
-    .dbtn.running{border-color:var(--green);border-width:2px;background:rgba(16,185,129,.07);}
+    /* Live app (non-pinned, running) */
+    .dbtn.app-live{border-color:rgba(16,185,129,.5);border-width:1.5px;}
+    .dbtn.app-live .dlbl{color:var(--green);}
+
+    /* Running dot on pinned apps */
+    .running-dot{position:absolute;top:-2px;right:-2px;width:7px;height:7px;
+      background:var(--green);border-radius:50%;display:none;}
 
     /* System btn variants */
     .dbtn.sys{border-color:rgba(139,92,246,.3);}
@@ -116,6 +121,17 @@
     .dbtn.sysc{border-color:rgba(99,102,241,.3);}
     .dbtn.sysc .dicon{color:var(--accent);}
     .dbtn.toggled{background:rgba(139,92,246,.2);border-color:var(--accent2);}
+
+    /* Section headers */
+    .sec-hdr{display:flex;align-items:center;gap:5px;padding:8px 2px 5px;
+      font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+    .sec-hdr.purple{color:var(--accent2);}
+    .sec-hdr.green{color:var(--green);}
+    .sec-hdr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+    /* Apps page wrapper */
+    #apps-wrap{position:relative;}
+    #apps-edit-btn{position:absolute;top:0;right:0;font-size:11px;color:#444;padding:4px 2px;z-index:1;}
 
     /* Flash */
     @keyframes fok {0%{background:rgba(16,185,129,.35)}100%{background:var(--card)}}
@@ -146,6 +162,32 @@
     #settings input:focus{border-color:var(--accent);}
     #savebtn{width:100%;padding:10px;background:var(--accent);border-radius:8px;
       font-size:14px;font-weight:600;color:#fff;}
+
+    /* ── App editor overlay ── */
+    #app-editor-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;
+      align-items:flex-end;justify-content:center;}
+    #app-editor-overlay.show{display:flex;}
+    #app-editor{background:#111;border-radius:16px 16px 0 0;width:100%;max-width:420px;
+      max-height:82vh;display:flex;flex-direction:column;
+      padding-bottom:max(env(safe-area-inset-bottom),8px);}
+    #app-editor-hdr{display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px 10px;border-bottom:1px solid #222;flex-shrink:0;}
+    #app-editor-hdr h3{font-size:15px;font-weight:700;}
+    #app-editor-close{font-size:20px;color:#555;padding:0 4px;line-height:1;}
+    #app-editor-list{overflow-y:auto;flex:1;}
+    .ae-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #1a1a1a;}
+    .ae-emoji{font-size:18px;width:26px;text-align:center;flex-shrink:0;}
+    .ae-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .ae-pin{font-size:16px;padding:4px 6px;color:#444;border-radius:6px;transition:color .15s;}
+    .ae-pin.on{color:var(--accent2);}
+    .ae-del{font-size:14px;padding:4px 6px;color:#444;border-radius:6px;}
+    .ae-del:hover{color:var(--red);}
+    #app-editor-add{display:flex;gap:8px;padding:10px 16px;border-top:1px solid #222;flex-shrink:0;}
+    #ae-add-inp{flex:1;padding:8px 10px;background:#1a1a1a;border:1px solid #333;
+      border-radius:8px;color:#fff;font-size:13px;font-family:inherit;outline:none;}
+    #ae-add-inp:focus{border-color:var(--accent);}
+    #ae-add-btn{padding:8px 12px;background:var(--accent);border-radius:8px;
+      font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
 
     /* ── Portrait ── */
     @media(orientation:portrait){
@@ -214,7 +256,21 @@
 
       <div id="pages">
         <div class="page active" id="page0">
-          <div class="grid" id="apps-grid"></div>
+          <div id="apps-wrap">
+            <button id="apps-edit-btn" title="Gérer les apps">✏</button>
+            <div id="base-section">
+              <div class="sec-hdr purple">
+                <div class="sec-hdr-dot" style="background:var(--accent2)"></div>Base
+              </div>
+              <div class="grid" id="base-grid"></div>
+            </div>
+            <div id="live-section" style="display:none">
+              <div class="sec-hdr green">
+                <div class="sec-hdr-dot" style="background:var(--green)"></div>En cours
+              </div>
+              <div class="grid" id="live-grid"></div>
+            </div>
+          </div>
         </div>
         <div class="page" id="page1">
           <div class="grid" id="sys-grid"></div>
@@ -257,6 +313,22 @@
   </div>
 </div>
 
+<!-- App editor overlay -->
+<div id="app-editor-overlay">
+  <div id="app-editor">
+    <div id="app-editor-hdr">
+      <h3>Apps</h3>
+      <button id="app-editor-close">✕</button>
+    </div>
+    <div id="app-editor-list"></div>
+    <div id="app-editor-add">
+      <input type="text" id="ae-add-inp" placeholder="Nom d'app ou https://…" autocomplete="off"
+             autocorrect="off" autocapitalize="none">
+      <button id="ae-add-btn">Ajouter</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── State ──────────────────────────────────────────────────────────────────────
 let macIP     = localStorage.getItem('macIP')      || '';
@@ -265,30 +337,76 @@ let base      = macIP ? `http://${macIP}:3000` : '';
 let vol = 50, brt = 100, muted = false, micMuted = false;
 let running = [], pollTimer = null;
 
-const APPS = [
-  {name:'Safari',            label:'Safari',   emoji:'🌐'},
-  {name:'Visual Studio Code',label:'VS Code',  emoji:'💻'},
-  {name:'Terminal',          label:'Terminal', emoji:'⌨️'},
-  {name:'Spotify',           label:'Spotify',  emoji:'🎵'},
-  {name:'Discord',           label:'Discord',  emoji:'💬'},
-  {name:'Finder',            label:'Finder',   emoji:'📁'},
-  {name:'Mail',              label:'Mail',     emoji:'✉️'},
-  {name:'Notion',            label:'Notion',   emoji:'📝'},
+// ── Custom apps ────────────────────────────────────────────────────────────────
+const DEFAULT_APPS = [
+  {name:'Safari',             label:'Safari',   isPinned:true},
+  {name:'Visual Studio Code', label:'VS Code',  isPinned:true},
+  {name:'Terminal',           label:'Terminal', isPinned:true},
+  {name:'Spotify',            label:'Spotify',  isPinned:true},
+  {name:'Discord',            label:'Discord',  isPinned:true},
+  {name:'Finder',             label:'Finder',   isPinned:true},
+  {name:'Mail',               label:'Mail',     isPinned:true},
+  {name:'Notion',             label:'Notion',   isPinned:true},
 ];
 
-const SYS = [
-  {label:'Verrouiller', emoji:'🔒', cls:'sys',  fn:()=>post('/system/lock')},
-  {label:'Veille écran',emoji:'🌑', cls:'sys',  fn:()=>post('/system/sleep-display')},
-  {label:'Screenshot',  emoji:'📸', cls:'sysc', fn:()=>post('/shortcut',{keys:['cmd','shift','3']})},
-  {label:'Apparence',   emoji:'◐',  cls:'sys',  fn:()=>post('/system/dark-mode'), id:'darkmode'},
-  {label:'Mission Ctrl',emoji:'🪟', cls:'sysc', fn:()=>post('/shortcut',{keys:['F3']})},
-  {label:'Focus/DND',   emoji:'🔕', cls:'sys',  fn:()=>post('/system/dnd'), id:'dnd'},
-  {label:'Sleep Mac',   emoji:'💤', cls:'sys',  fn:()=>post('/system/sleep')},
-  {label:'Corbeille',   emoji:'🗑', cls:'sys',  fn:()=>post('/system/trash')},
-  {label:'Spotlight',   emoji:'🔍', cls:'sysc', fn:()=>post('/shortcut',{keys:['cmd','space']})},
-  {label:'App Switch',  emoji:'⇥',  cls:'sysc', fn:()=>post('/shortcut',{keys:['cmd','tab']})},
-  {label:'Quitter App', emoji:'✕',  cls:'sys',  fn:()=>post('/shortcut',{keys:['cmd','q']})},
-];
+const SYSTEM_FILTER = new Set([
+  'dock','systemuiserver','loginwindow','windowserver','spotlight',
+  'control center','notification center','airplayuiagent','corelocationagent',
+  'universalaccessd','macdeck'
+]);
+
+let customApps = loadApps();
+
+function loadApps() {
+  try {
+    const saved = localStorage.getItem('customApps');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return DEFAULT_APPS.map(a => ({...a}));
+}
+
+function saveApps() {
+  localStorage.setItem('customApps', JSON.stringify(customApps));
+}
+
+function iconForApp(name) {
+  const l = name.toLowerCase();
+  if (l.startsWith('http://') || l.startsWith('https://')) return '🌐';
+  if (l.includes('youtube'))   return '▶️';
+  if (l.includes('safari'))    return '🌐';
+  if (l.includes('code') || l.includes('vscode')) return '💻';
+  if (l.includes('terminal') || l.includes('iterm')) return '⌨️';
+  if (l.includes('spotify'))   return '🎵';
+  if (l.includes('discord'))   return '💬';
+  if (l.includes('finder'))    return '📁';
+  if (l.includes('mail'))      return '✉️';
+  if (l.includes('calendar'))  return '📅';
+  if (l.includes('photo'))     return '🖼️';
+  if (l.includes('music'))     return '🎵';
+  if (l.includes('xcode'))     return '🔨';
+  if (l.includes('slack'))     return '💬';
+  if (l.includes('figma'))     return '🎨';
+  if (l.includes('chrome'))    return '🌐';
+  if (l.includes('firefox'))   return '🔥';
+  if (l.includes('notion'))    return '📝';
+  if (l.includes('zoom'))      return '📹';
+  if (l.includes('whatsapp') || l.includes('telegram') || l.includes('message')) return '💬';
+  if (l.includes('screen'))    return '🖥️';
+  if (l.includes('numbers'))   return '🔢';
+  if (l.includes('pages'))     return '📄';
+  if (l.includes('keynote'))   return '📊';
+  if (l.includes('vlc') || l.includes('video') || l.includes('player')) return '🎬';
+  if (l.includes('arc') || l.includes('browser')) return '🌐';
+  if (l.includes('word') || l.includes('excel') || l.includes('powerpoint')) return '📄';
+  return '📱';
+}
+
+function labelForName(name) {
+  if (name.startsWith('http://') || name.startsWith('https://')) {
+    try { return new URL(name).hostname.replace(/^www\./, ''); } catch {}
+  }
+  return name;
+}
 
 // ── API ────────────────────────────────────────────────────────────────────────
 async function req(method, path, body) {
@@ -429,48 +547,115 @@ function flash(el, ok) {
 }
 
 // ── Apps grid ──────────────────────────────────────────────────────────────────
-function buildApps() {
-  const g = document.getElementById('apps-grid');
-  g.innerHTML = '';
-  APPS.forEach(app => {
-    const btn = document.createElement('button');
-    btn.className = 'dbtn'; btn.dataset.app = app.name;
+function makeAppBtn(app) {
+  const btn = document.createElement('button');
+  btn.className = 'dbtn' + (app.isPinned ? '' : ' app-live');
+  btn.dataset.app = app.name;
 
-    const icon = document.createElement('div'); icon.className = 'dicon';
-    const img = document.createElement('img');
-    const em  = document.createElement('span'); em.textContent = app.emoji;
-    img.style.display = 'none';
-    if (base) {
-      img.src = `${base}/app-icon?name=${encodeURIComponent(app.name)}`;
-      img.onload  = () => { img.style.display=''; em.style.display='none'; };
-      img.onerror = () => { img.style.display='none'; em.style.display=''; };
-    }
-    icon.appendChild(img); icon.appendChild(em);
+  const icon = document.createElement('div'); icon.className = 'dicon';
 
-    const lbl = document.createElement('span'); lbl.className='dlbl'; lbl.textContent=app.label;
-    btn.appendChild(icon); btn.appendChild(lbl);
+  const img = document.createElement('img');
+  const em  = document.createElement('span'); em.textContent = iconForApp(app.name);
+  img.style.display = 'none';
+  if (base) {
+    img.src = `${base}/app-icon?name=${encodeURIComponent(app.name)}`;
+    img.onload  = () => { img.style.display=''; em.style.display='none'; };
+    img.onerror = () => { img.style.display='none'; em.style.display=''; };
+  }
+  icon.appendChild(img); icon.appendChild(em);
 
-    btn.addEventListener('click', async () => {
-      const r = await post('/launch', {app: app.name});
-      flash(btn, r.success !== false);
-    });
-    g.appendChild(btn);
+  if (app.isPinned) {
+    const dot = document.createElement('div');
+    dot.className = 'running-dot';
+    icon.appendChild(dot);
+  }
+
+  const lbl = document.createElement('span');
+  lbl.className = 'dlbl';
+  lbl.textContent = app.label || app.name;
+  btn.appendChild(icon); btn.appendChild(lbl);
+
+  btn.addEventListener('click', async () => {
+    const r = await post('/launch', {app: app.name});
+    flash(btn, r.success !== false);
   });
+  return btn;
+}
+
+function buildApps() {
+  const baseApps = customApps.filter(a => a.isPinned);
+  const liveApps = customApps.filter(a => !a.isPinned);
+
+  const baseSection = document.getElementById('base-section');
+  const liveSection = document.getElementById('live-section');
+  const baseGrid    = document.getElementById('base-grid');
+  const liveGrid    = document.getElementById('live-grid');
+
+  baseSection.style.display = baseApps.length ? '' : 'none';
+  baseGrid.innerHTML = '';
+  baseApps.forEach(a => baseGrid.appendChild(makeAppBtn(a)));
+
+  liveSection.style.display = liveApps.length ? '' : 'none';
+  liveGrid.innerHTML = '';
+  liveApps.forEach(a => liveGrid.appendChild(makeAppBtn(a)));
+
   refreshRunning();
 }
 
 function refreshRunning() {
-  document.querySelectorAll('#apps-grid .dbtn').forEach(btn => {
+  document.querySelectorAll('#base-grid .dbtn').forEach(btn => {
     const n = (btn.dataset.app || '').toLowerCase();
     const on = running.some(r => {
       const rn = r.toLowerCase();
       return rn === n || rn.includes(n) || n.includes(rn);
     });
-    btn.classList.toggle('running', on);
+    const dot = btn.querySelector('.running-dot');
+    if (dot) dot.style.display = on ? '' : 'none';
   });
 }
 
+function applyRunning(newRunning) {
+  running = newRunning;
+  const runningSet = new Set(running.map(r => r.toLowerCase()));
+  const pinnedNames = new Set(customApps.filter(a => a.isPinned).map(a => a.name.toLowerCase()));
+  const existingNames = new Set(customApps.map(a => a.name.toLowerCase()));
+
+  let changed = false;
+
+  // Remove non-pinned apps that are no longer running
+  const before = customApps.length;
+  customApps = customApps.filter(a => a.isPinned || runningSet.has(a.name.toLowerCase()));
+  if (customApps.length !== before) changed = true;
+
+  // Add newly running apps
+  for (const r of running) {
+    const rl = r.toLowerCase();
+    if (!SYSTEM_FILTER.has(rl) && !existingNames.has(rl) && !pinnedNames.has(rl)) {
+      customApps.push({name: r, label: labelForName(r), isPinned: false});
+      existingNames.add(rl);
+      changed = true;
+    }
+  }
+
+  if (changed) { saveApps(); buildApps(); }
+  else refreshRunning();
+}
+
 // ── System grid ───────────────────────────────────────────────────────────────
+const SYS = [
+  {label:'Verrouiller', emoji:'🔒', cls:'sys',  fn:()=>post('/system/lock')},
+  {label:'Veille écran',emoji:'🌑', cls:'sys',  fn:()=>post('/system/sleep-display')},
+  {label:'Screenshot',  emoji:'📸', cls:'sysc', fn:()=>post('/shortcut',{keys:['cmd','shift','3']})},
+  {label:'Apparence',   emoji:'◐',  cls:'sys',  fn:()=>post('/system/dark-mode'), id:'darkmode'},
+  {label:'Mission Ctrl',emoji:'🪟', cls:'sysc', fn:()=>post('/shortcut',{keys:['F3']})},
+  {label:'Focus/DND',   emoji:'🔕', cls:'sys',  fn:()=>post('/system/dnd'), id:'dnd'},
+  {label:'Sleep Mac',   emoji:'💤', cls:'sys',  fn:()=>post('/system/sleep')},
+  {label:'Corbeille',   emoji:'🗑', cls:'sys',  fn:()=>post('/system/trash')},
+  {label:'Spotlight',   emoji:'🔍', cls:'sysc', fn:()=>post('/shortcut',{keys:['cmd','space']})},
+  {label:'App Switch',  emoji:'⇥',  cls:'sysc', fn:()=>post('/shortcut',{keys:['cmd','tab']})},
+  {label:'Quitter App', emoji:'✕',  cls:'sys',  fn:()=>post('/shortcut',{keys:['cmd','q']})},
+];
+
 function buildSys() {
   const g = document.getElementById('sys-grid');
   g.innerHTML = '';
@@ -492,6 +677,70 @@ function buildSys() {
   });
 }
 
+// ── App editor ────────────────────────────────────────────────────────────────
+function openAppEditor() {
+  renderAppEditor();
+  document.getElementById('app-editor-overlay').classList.add('show');
+}
+function closeAppEditor() {
+  document.getElementById('app-editor-overlay').classList.remove('show');
+}
+
+function renderAppEditor() {
+  const list = document.getElementById('app-editor-list');
+  list.innerHTML = '';
+  customApps.forEach((app, idx) => {
+    const row = document.createElement('div'); row.className = 'ae-row';
+
+    const em = document.createElement('span'); em.className = 'ae-emoji';
+    em.textContent = iconForApp(app.name);
+
+    const nm = document.createElement('span'); nm.className = 'ae-name';
+    nm.textContent = app.label || app.name;
+
+    const pin = document.createElement('button');
+    pin.className = 'ae-pin' + (app.isPinned ? ' on' : '');
+    pin.title = app.isPinned ? 'Retirer du panel de base' : 'Épingler au panel de base';
+    pin.textContent = '📌';
+    pin.addEventListener('click', () => {
+      customApps[idx].isPinned = !customApps[idx].isPinned;
+      saveApps(); buildApps(); renderAppEditor();
+    });
+
+    const del = document.createElement('button');
+    del.className = 'ae-del'; del.title = 'Supprimer'; del.textContent = '✕';
+    del.addEventListener('click', () => {
+      customApps.splice(idx, 1);
+      saveApps(); buildApps(); renderAppEditor();
+    });
+
+    row.appendChild(em); row.appendChild(nm); row.appendChild(pin); row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('apps-edit-btn').addEventListener('click', openAppEditor);
+document.getElementById('app-editor-close').addEventListener('click', closeAppEditor);
+document.getElementById('app-editor-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('app-editor-overlay')) closeAppEditor();
+});
+
+document.getElementById('ae-add-btn').addEventListener('click', () => {
+  const inp = document.getElementById('ae-add-inp');
+  const val = inp.value.trim();
+  if (!val) return;
+  const exists = customApps.some(a => a.name.toLowerCase() === val.toLowerCase());
+  if (!exists) {
+    customApps.push({name: val, label: labelForName(val), isPinned: true});
+    saveApps(); buildApps();
+  }
+  inp.value = '';
+  renderAppEditor();
+});
+document.getElementById('ae-add-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('ae-add-btn').click();
+});
+
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
@@ -511,13 +760,12 @@ async function sync() {
   if (s.micMuted != null) setMic(s.micMuted);
   if (s.nowPlaying) updateMedia(s.nowPlaying);
   updateBattery(s.battery, s.charging);
-  if (s.runningApps) { running = s.runningApps; refreshRunning(); }
+  if (s.runningApps) applyRunning(s.runningApps);
   if (s.darkMode != null) {
     const d = document.getElementById('sysbtn-darkmode');
     if (d) d.classList.toggle('toggled', s.darkMode);
   }
 
-  // Brightness separate (not in status yet always available)
   const br = await get('/system/brightness');
   if (br.value != null) applyBrt(br.value);
 }
